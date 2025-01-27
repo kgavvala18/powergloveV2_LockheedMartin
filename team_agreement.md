@@ -1,5 +1,5 @@
 # Team Agreement
-* Lockheed Glove
+* The Gauntlet
 * 01/27/2025
 
 ## Team Goals and Objectives
