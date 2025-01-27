@@ -3,7 +3,26 @@
 * 01/27/2025
 
 ## Team Goals and Objectives
-* SMART[^1] goals for the team.
+* Pass
+* Graduate
+* Live (not kill self or team) (ideally but not strictly necessary)
+* Keep a good work ethic
+* Reimagine the power glove for the modern era.
+* The glove should output interpretable data which can be used by software such as a mouse or other controls.
+* It should have the following features
+    * Aiming
+    * Right click
+    * Left click
+    * Scrolling
+    * Zooming
+    * Bluetooth connection
+
+Stretch goals:
+* Integrate into a game
+* 3D rotation
+* Alt-Tab feature
+* Multiple mouse interpretations (wasd or laser pointer)
+
 
 [^1]: **S**pecific, **M**easurable, **A**chievable, **R**elevant, **T**imeboxed
 
@@ -37,4 +56,4 @@ Use the separate discord chat channels accordingly.
 
 
 ## Team Member Signatures
-* David Johnson   
+* David Johnson, Will Tatum
