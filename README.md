@@ -4,8 +4,6 @@
 
 When developing locally, a new branch should be created so that you will able to develop without disturbing the main branch. 
 
-Please use Kebab Case for the naming convention of the branches (Ex: branch-name). Also, try to make the branch name descriptive as to what change is being made. 
-
 Commands:
 
 1. `git branch <branch-name>` - Create branch
