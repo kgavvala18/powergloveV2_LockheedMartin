@@ -13,6 +13,7 @@
 * Aaron Martinez: Hardware/software and whatever else is needed.
 * Brint Nielson: Software/hardware and whatever else is needed.
 * Grant Turner: Hardware/software and whatever else is needed.
+* Kris Gavvala: Hardware/software and whatever else is needed.
 
 
 ## Communication Expectations
