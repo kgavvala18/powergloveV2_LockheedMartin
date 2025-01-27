@@ -57,4 +57,4 @@ Use the separate discord chat channels accordingly.
 
 
 ## Team Member Signatures
-* Will Tatum
+* David Johnson, Will Tatum
