@@ -5,17 +5,36 @@
 
 ## Team Goals and Objectives
 
-- SMART[^1] goals for the team.
+* Pass
+* Graduate
+* Live (not kill self or team) (ideally but not strictly necessary)
+* Keep a good work ethic
+* Reimagine the power glove for the modern era.
+* The glove should output interpretable data which can be used by software such as a mouse or other controls.
+* It should have the following features
+    * Aiming
+    * Right click
+    * Left click
+    * Scrolling
+    * Zooming
+    * Bluetooth connection
+
+Stretch goals:
+* Integrate into a game
+* 3D rotation
+* Alt-Tab feature
+* Multiple mouse interpretations (wasd or laser pointer)
 
 [^1]: **S**pecific, **M**easurable, **A**chievable, **R**elevant, **T**imeboxed
 
 ## Roles and Responsibilities
 
-- David Johnson: Team leader and both hardware and software support.
-- Will Tatum: Hardware/software and whatever else is needed.
-- Aaron Martinez: Hardware/software and whatever else is needed.
-- Brint Nielson: Software/hardware and whatever else is needed.
-- Grant Turner: Hardware/software and whatever else is needed.
+* David Johnson: Team leader and both hardware and software support.
+* Will Tatum: Hardware/software and whatever else is needed.
+* Aaron Martinez: Hardware/software and whatever else is needed.
+* Brint Nielson: Software/hardware and whatever else is needed.
+* Grant Turner: Hardware/software and whatever else is needed.
+* Kris Gavvala: Hardware/software and whatever else is needed.
 
 ## Communication Expectations
 
@@ -42,5 +61,8 @@
 
 ## Team Member Signatures
 
-- checkout new branch, add name, sign commit, push branch to remote, make pull request  
-  Grant Turner
+* Grant Turner
+* David Johnson
+* Will Tatum
+* Kris Gavvala
+* Brint Nielson
