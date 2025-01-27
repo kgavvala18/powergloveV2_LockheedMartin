@@ -61,8 +61,10 @@ Stretch goals:
 
 ## Team Member Signatures
 
+* Aaron Martinez    
 * Grant Turner
 * David Johnson
 * Will Tatum
 * Kris Gavvala
 * Brint Nielson
+
