@@ -60,3 +60,4 @@ Use the separate discord chat channels accordingly.
 * David Johnson
 * Will Tatum
 * Kris Gavvala
+* Brint Nielson
