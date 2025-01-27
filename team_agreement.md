@@ -37,4 +37,4 @@ Use the separate discord chat channels accordingly.
 
 
 ## Team Member Signatures
-* checkout new branch, add name, sign commit, push branch to remote, make pull request    
+* Aaron Martinez    
