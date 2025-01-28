@@ -65,6 +65,6 @@ Stretch goals:
 * Grant Turner
 * David Johnson
 * Will Tatum
-* Kris Gavvala
+* Kris A. Gavvala
 * Brint Nielson
 
