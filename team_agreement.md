@@ -5,11 +5,9 @@
 
 ## Team Goals and Objectives
 
-* Pass
-* Graduate
-* Live (not kill self or team) (ideally but not strictly necessary)
 * Keep a good work ethic
 * Reimagine the power glove for the modern era.
+* Must keep design of original Power Glove
 * The glove should output interpretable data which can be used by software such as a mouse or other controls.
 * It should have the following features
     * Aiming
@@ -18,23 +16,30 @@
     * Scrolling
     * Zooming
     * Bluetooth connection
+    * Turn off at a certain degree of elevation
 
 Stretch goals:
+* GUI for Controls
+    * Design a GUI to allow a user to customize controls and preferences for their glove
+    * Allow user to change what buttons do and what degree the glove turns off
+    * Also allow user to customize gestures
+* Additional Gesutres recognized
+    * Add additional gestures for the user to use to control their computer (ie Alt-tab)
 * Integrate into a game
-* 3D rotation
-* Alt-Tab feature
+    * Be able to fully use glove to control a game
 * Multiple mouse interpretations (wasd or laser pointer)
+    * If possible allow user to also use the glove controls to control the cursor with buttons like wasd 
 
 [^1]: **S**pecific, **M**easurable, **A**chievable, **R**elevant, **T**imeboxed
 
 ## Roles and Responsibilities
 
-* David Johnson: Team leader and both hardware and software support.
-* Will Tatum: Hardware/software and whatever else is needed.
-* Aaron Martinez: Hardware/software and whatever else is needed.
-* Brint Nielson: Software/hardware and whatever else is needed.
-* Grant Turner: Hardware/software and whatever else is needed.
-* Kris Gavvala: Hardware/software and whatever else is needed.
+* David Johnson: Scrum Master
+* Will Tatum: Computer Software Lead
+* Aaron Martinez: Hardware Lead
+* Brint Nielson: Driver Software Lead
+* Grant Turner: Design Lead
+* Kris Gavvala: Systems Integration Lead
 
 ## Communication Expectations
 
