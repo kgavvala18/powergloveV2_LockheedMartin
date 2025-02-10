@@ -23,7 +23,7 @@ Stretch goals:
     * Design a GUI to allow a user to customize controls and preferences for their glove
     * Allow user to change what buttons do and what degree the glove turns off
     * Also allow user to customize gestures
-* Additional Gesutres recognized
+* Additional Gestures recognized
     * Add additional gestures for the user to use to control their computer (ie Alt-tab)
 * Integrate into a game
     * Be able to fully use glove to control a game
