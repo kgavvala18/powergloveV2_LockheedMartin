@@ -54,7 +54,7 @@ Adafruit_SHT31 sht30;       // humidity
 BLEDis bledis;
 BLEHidAdafruit blehid;
 
-#define MOVE_STEP    10
+#define MOVE_STEP    1
 
 uint8_t proximity;
 uint16_t r, g, b, c;
@@ -64,6 +64,7 @@ float accel_x, accel_y, accel_z;
 float gyro_x, gyro_y, gyro_z;
 float humidity;
 int32_t mic;
+int x_step, y_step;
 long int accel_array[6];
 long int check_array[6]={0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
 
@@ -131,21 +132,23 @@ void setup(void) {
 }
 
 void loop(void) {
-  proximity = apds9960.readProximity();
-  while (!apds9960.colorDataReady()) {
-    delay(5);
-  }
-  apds9960.getColorData(&r, &g, &b, &c);
+  // proximity = apds9960.readProximity();
+  // while (!apds9960.colorDataReady()) {
+  //   delay(5);
+  // }
+  // apds9960.getColorData(&r, &g, &b, &c);
 
-  temperature = bmp280.readTemperature();
-  pressure = bmp280.readPressure();
-  altitude = bmp280.readAltitude(1013.25);
+  // temperature = bmp280.readTemperature();
+  // pressure = bmp280.readPressure();
+  // altitude = bmp280.readAltitude(1013.25);
 
   lis3mdl.read();
   magnetic_x = lis3mdl.x;
   magnetic_y = lis3mdl.y;
   magnetic_z = lis3mdl.z;
-
+  accel_x = 0;
+  accel_y = 0;
+  accel_z = 0;
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
@@ -162,74 +165,77 @@ void loop(void) {
   gyro_y = gyro.gyro.y;
   gyro_z = gyro.gyro.z;
 
-  humidity = sht30.readHumidity();
+  // humidity = sht30.readHumidity();
 
-  samplesRead = 0;
-  mic = getPDMwave(4000);
+  // samplesRead = 0;
+  // mic = getPDMwave(4000);
   
-  Serial.println("\nFeather Sense Sensor Demo");
-  Serial.println("---------------------------------------------");
-  Serial.print("Proximity: ");
-  Serial.println(apds9960.readProximity());
-  Serial.print("Red: ");
-  Serial.print(r);
-  Serial.print(" Green: ");
-  Serial.print(g);
-  Serial.print(" Blue :");
-  Serial.print(b);
-  Serial.print(" Clear: ");
-  Serial.println(c);
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println(" C");
-  Serial.print("Barometric pressure: ");
-  Serial.println(pressure);
-  Serial.print("Altitude: ");
-  Serial.print(altitude);
-  Serial.println(" m");
-  Serial.print("Magnetic: ");
-  Serial.print(magnetic_x);
-  Serial.print(" ");
-  Serial.print(magnetic_y);
-  Serial.print(" ");
-  Serial.print(magnetic_z);
-  Serial.println(" uTesla");
-  Serial.print("Acceleration: ");
-  Serial.print(accel_x);
-  Serial.print(" ");
-  Serial.print(accel_y);
-  Serial.print(" ");
-  Serial.print(accel_z);
-  Serial.println(" m/s^2");
-  Serial.print("Gyro: ");
-  Serial.print(gyro_x);
-  Serial.print(" ");
-  Serial.print(gyro_y);
-  Serial.print(" ");
-  Serial.print(gyro_z);
-  Serial.println(" dps");
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.println(" %");
-  Serial.print("Mic: ");
-  Serial.println(mic);
-  delay(300);
-
-  if (Serial.available())
-  {
-    if(gyro_x>.01){
-      blehid.mouseMove(0, -MOVE_STEP);
-    }
-    if(gyro_x<-.01){
-      blehid.mouseMove(0, MOVE_STEP);
-    }
-    if(gyro_y>.01){
-      blehid.mouseMove(MOVE_STEP, 0);
-    }
-    if(gyro_y<-.01){
-      blehid.mouseMove(-MOVE_STEP, 0);
-    }
-    // {
+  // Serial.println("\nFeather Sense Sensor Demo");
+  // Serial.println("---------------------------------------------");
+  // Serial.print("Proximity: ");
+  // Serial.println(apds9960.readProximity());
+  // Serial.print("Red: ");
+  // Serial.print(r);
+  // Serial.print(" Green: ");
+  // Serial.print(g);
+  // Serial.print(" Blue :");
+  // Serial.print(b);
+  // Serial.print(" Clear: ");
+  // Serial.println(c);
+  // Serial.print("Temperature: ");
+  // Serial.print(temperature);
+  // Serial.println(" C");
+  // Serial.print("Barometric pressure: ");
+  // Serial.println(pressure);
+  // Serial.print("Altitude: ");
+  // Serial.print(altitude);
+  // Serial.println(" m");
+  // Serial.print("Magnetic: ");
+  // Serial.print(magnetic_x);
+  // Serial.print(" ");
+  // Serial.print(magnetic_y);
+  // Serial.print(" ");
+  // Serial.print(magnetic_z);
+  // Serial.println(" uTesla");
+  // Serial.print("Acceleration: ");
+  // Serial.print(accel_x);
+  // Serial.print(" ");
+  // Serial.print(accel_y);
+  // Serial.print(" ");
+  // Serial.print(accel_z);
+  // Serial.println(" m/s^2");
+  // Serial.print("Gyro: ");
+  // Serial.print(gyro_x);
+  // Serial.print(" ");
+  // Serial.print(gyro_y);
+  // Serial.print(" ");
+  // Serial.print(gyro_z);
+  // Serial.println(" dps");
+  // Serial.print("Humidity: ");
+  // Serial.print(humidity);
+  // Serial.println(" %");
+  // Serial.print("Mic: ");
+  // Serial.println(mic);
+  //delay(300);
+  //accel_y -= 4.85; //trimmed off extra processes
+  x_step = 0;
+  y_step = 0;
+  if(accel_x>1){ //edit the code such that the if statements do the coord vals and then update all at once at the end
+    y_step = -MOVE_STEP; //eg movestepx = 1
+  }
+  if(accel_x<-1){
+    y_step = MOVE_STEP;
+  }
+  if(accel_y>1){
+    x_step = MOVE_STEP; //eg movestep y = y
+  }
+  if(accel_y<-1){
+    x_step = -MOVE_STEP;
+  }
+  if(y_step>0){
+      x_step *= -1; //because sides are reversed when upside down
+  }
+  blehid.mouseMove(x_step, y_step); //update coordinates at the same time to avoid stair step-ing
 
     //   // LRMBF for mouse button(s)
     //   case 'L':
@@ -260,7 +266,7 @@ void loop(void) {
 
     //   default: break;
     // }
-  }
+  
 }
 
 /*****************************************************************/
