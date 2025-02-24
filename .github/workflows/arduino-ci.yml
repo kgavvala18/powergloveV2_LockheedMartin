@@ -42,15 +42,11 @@ jobs:
 
       - name: Install Required Libraries
         run: |
-          arduino-cli lib install "Adafruit APDS9960"
+          arduino-cli lib install "Adafruit APDS9960 Library"
           arduino-cli lib install "Adafruit BMP280 Library"
           arduino-cli lib install "Adafruit LIS3MDL"
-          arduino-cli lib install "Adafruit LSM6DS33"
-          arduino-cli lib install "Adafruit LSM6DS3TR-C"
+          arduino-cli lib install "Adafruit LSM6DS"
           arduino-cli lib install "Adafruit SHT31 Library"
-          arduino-cli lib install "Adafruit Unified Sensor"
-          arduino-cli lib install "PDM"
-          arduino-cli lib install "Adafruit Bluefruit nRF52 Libraries"
 
   compile:
     name: Compile Arduino Sketches
