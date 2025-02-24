@@ -47,9 +47,6 @@ jobs:
           arduino-cli lib install "Adafruit LIS3MDL"
           arduino-cli lib install "Adafruit LSM6DS"
           arduino-cli lib install "Adafruit SHT31 Library"
-          arduino-cli lib install "Adafruit Unified Sensor"
-          arduino-cli lib install "PDM"
-          arduino-cli lib install "Adafruit Bluefruit nRF52 Libraries"
 
   compile:
     name: Compile Arduino Sketches
