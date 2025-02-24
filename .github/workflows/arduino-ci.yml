@@ -30,6 +30,11 @@ jobs:
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
 
+      - name: Install Python and `adafruit-nrfutil`
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install adafruit-nrfutil
+
       - name: Add Adafruit Board Manager URL
         run: |
           arduino-cli config init
