@@ -55,6 +55,7 @@ BLEDis bledis;
 BLEHidAdafruit blehid;
 
 #define MOVE_STEP    1
+#define SCROLL_STEP    1
 
 uint8_t proximity;
 uint16_t r, g, b, c;
@@ -236,6 +237,14 @@ void loop(void) {
       x_step *= -1; //because sides are reversed when upside down
   }
   blehid.mouseMove(x_step, y_step); //update coordinates at the same time to avoid stair step-ing
+
+  //implement scroll detection
+  if(accel_z>1){
+    blehid.mouseScroll(SCROLL_STEP);
+  }
+  else if(accel_z<-1){
+    blehid.mouseScroll(-SCROLL_STEP);
+  }
 
     //   // LRMBF for mouse button(s)
     //   case 'L':
