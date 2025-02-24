@@ -63,6 +63,7 @@ jobs:
       - name: Compile Sketches
         uses: arduino/compile-sketches@v1
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           fqbn: adafruit:nrf52:feather52840sense
           sketch-paths: MouseMovement
           platforms: |
