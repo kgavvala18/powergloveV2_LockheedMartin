@@ -55,10 +55,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
+  
       - name: Compile Sketches
         uses: arduino/compile-sketches@v1
         with:
           fqbn: adafruit:nrf52:feather52840sense
-          sketch-paths: |
-            MouseMovement
+          sketch-paths: MouseMovement
+          platforms: |
+            - name: "adafruit:nrf52"
+              source-url: "https://adafruit.github.io/arduino-board-index/package_adafruit_index.json"
