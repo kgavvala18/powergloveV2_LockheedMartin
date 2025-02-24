@@ -191,7 +191,7 @@ void loop(void) {
     last_time = current_time;
 
     
-    
+    //
     //integrate 
     //if need to save computation maybe check if these changed?
     velocity_z += accel_z * dt;
