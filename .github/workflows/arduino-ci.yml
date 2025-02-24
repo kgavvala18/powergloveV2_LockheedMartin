@@ -17,7 +17,7 @@ jobs:
       - name: Run Arduino Lint
         uses: arduino/arduino-lint-action@v1
         with:
-          path: MouseMovement
+          path: .
           compliance: strict
 
   setup-arduino-cli:
@@ -42,11 +42,15 @@ jobs:
 
       - name: Install Required Libraries
         run: |
-          arduino-cli lib install "Adafruit APDS9960 Library"
+          arduino-cli lib install "Adafruit APDS9960"
           arduino-cli lib install "Adafruit BMP280 Library"
           arduino-cli lib install "Adafruit LIS3MDL"
-          arduino-cli lib install "Adafruit LSM6DS"
+          arduino-cli lib install "Adafruit LSM6DS33"
+          arduino-cli lib install "Adafruit LSM6DS3TR-C"
           arduino-cli lib install "Adafruit SHT31 Library"
+          arduino-cli lib install "Adafruit Unified Sensor"
+          arduino-cli lib install "PDM"
+          arduino-cli lib install "Adafruit Bluefruit nRF52 Libraries"
 
   compile:
     name: Compile Arduino Sketches
@@ -56,13 +60,24 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v1
-        with:
-          version: latest
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
 
-      - name: Compile All Sketches
-        uses: arduino/test-compile-for-arduino@v1
+      - name: Compile Sketches
+        uses: ArminJo/arduino-ci-action@v1
         with:
           fqbn: adafruit:nrf52:feather52840sense
-          sketch-path: MouseMovement
+          platforms: |
+            https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          libraries: |
+            Adafruit APDS9960
+            Adafruit BMP280 Library
+            Adafruit LIS3MDL
+            Adafruit LSM6DS33
+            Adafruit LSM6DS3TR-C
+            Adafruit SHT31 Library
+            Adafruit Unified Sensor
+            PDM
+            Adafruit Bluefruit nRF52 Libraries
+          sketch-names: |
+            .  # Compiles all sketches in the root folder
