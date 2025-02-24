@@ -27,12 +27,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Arduino CLI
-        uses: arduino/setup-arduino-cli@v2
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1
+        with:
+          version: latest
+
+      - name: Add Adafruit Board Manager URL
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          arduino-cli core update-index
 
       - name: Install Adafruit nRF52 Board Package
         run: |
-          arduino-cli core update-index
           arduino-cli core install adafruit:nrf52
 
       - name: Install Required Libraries
