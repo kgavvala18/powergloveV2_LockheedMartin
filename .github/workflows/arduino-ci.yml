@@ -29,8 +29,6 @@ jobs:
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
-        with:
-          version: latest
 
       - name: Add Adafruit Board Manager URL
         run: |
