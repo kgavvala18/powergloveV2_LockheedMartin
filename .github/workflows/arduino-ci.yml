@@ -63,7 +63,6 @@ jobs:
       - name: Compile Sketches
         uses: arduino/compile-sketches@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           fqbn: adafruit:nrf52:feather52840sense
           sketch-paths: MouseMovement
           platforms: |
@@ -75,7 +74,4 @@ jobs:
             - name: "Adafruit LIS3MDL"
             - name: "Adafruit LSM6DS"
             - name: "Adafruit SHT31 Library"
-          enable-deltas-report: true
-          enable-warnings-report: true
           verbose: true
-          sketches-report-path: "sketches-reports/sketches-report.json"
