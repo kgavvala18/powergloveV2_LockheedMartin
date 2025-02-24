@@ -42,7 +42,7 @@ jobs:
 
       - name: Install Required Libraries
         run: |
-          arduino-cli lib install "Adafruit APDS9960"
+          arduino-cli lib install "Adafruit APDS9960 Library"
           arduino-cli lib install "Adafruit BMP280 Library"
           arduino-cli lib install "Adafruit LIS3MDL"
           arduino-cli lib install "Adafruit LSM6DS33"
