@@ -17,7 +17,7 @@ jobs:
       - name: Run Arduino Lint
         uses: arduino/arduino-lint-action@v1
         with:
-          path: sketches
+          path: .
           compliance: strict
 
   setup-arduino-cli:
