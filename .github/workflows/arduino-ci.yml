@@ -1,0 +1,77 @@
+name: Arduino CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint Arduino Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Arduino Lint
+        uses: arduino/arduino-lint-action@v1
+        with:
+          path: MouseMovement
+          compliance: strict
+
+  setup-arduino-cli:
+    name: Setup Arduino CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Add Adafruit Board Manager URL
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          arduino-cli core update-index
+
+      - name: Install Adafruit nRF52 Board Package
+        run: |
+          arduino-cli core install adafruit:nrf52
+
+      - name: Install Required Libraries
+        run: |
+          arduino-cli lib install "Adafruit APDS9960 Library"
+          arduino-cli lib install "Adafruit BMP280 Library"
+          arduino-cli lib install "Adafruit LIS3MDL"
+          arduino-cli lib install "Adafruit LSM6DS"
+          arduino-cli lib install "Adafruit SHT31 Library"
+
+  compile:
+    name: Compile Arduino Sketches
+    needs: setup-arduino-cli
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: nrfutil
+        run: |
+          pip install adafruit-nrfutil
+  
+      - name: Compile Sketches
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: adafruit:nrf52:feather52840sense
+          sketch-paths: MouseMovement
+          platforms: |
+            - name: "adafruit:nrf52"
+              source-url: "https://adafruit.github.io/arduino-board-index/package_adafruit_index.json"
+          libraries: |
+            - name: "Adafruit APDS9960 Library"
+            - name: "Adafruit BMP280 Library"
+            - name: "Adafruit LIS3MDL"
+            - name: "Adafruit LSM6DS"
+            - name: "Adafruit SHT31 Library"
+          verbose: true
