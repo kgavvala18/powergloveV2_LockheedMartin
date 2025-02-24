@@ -60,7 +60,5 @@ jobs:
         uses: arduino/compile-sketches@v1
         with:
           fqbn: adafruit:nrf52:feather52840sense
-          platforms: |
-            https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
           sketch-paths: |
             MouseMovement
