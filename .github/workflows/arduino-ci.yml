@@ -60,20 +60,16 @@ jobs:
         uses: arduino/setup-arduino-cli@v2
 
       - name: Compile Sketches
-        uses: ArminJo/arduino-ci-action@v1
+        uses: arduino/compile-sketches@v1
         with:
           fqbn: adafruit:nrf52:feather52840sense
           platforms: |
             https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
           libraries: |
-            Adafruit APDS9960
+            Adafruit APDS9960 Library
             Adafruit BMP280 Library
             Adafruit LIS3MDL
-            Adafruit LSM6DS33
-            Adafruit LSM6DS3TR-C
+            Adafruit LSM6DS
             Adafruit SHT31 Library
-            Adafruit Unified Sensor
-            PDM
-            Adafruit Bluefruit nRF52 Libraries
           sketch-names: |
             .  # Compiles all sketches in the root folder
