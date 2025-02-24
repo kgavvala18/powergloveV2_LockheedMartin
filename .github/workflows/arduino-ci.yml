@@ -71,5 +71,5 @@ jobs:
             Adafruit LIS3MDL
             Adafruit LSM6DS
             Adafruit SHT31 Library
-          sketch-names: |
-            .  # Compiles all sketches in the root folder
+          sketch-paths: |
+            MouseMovement
