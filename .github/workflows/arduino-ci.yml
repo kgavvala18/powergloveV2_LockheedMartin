@@ -66,4 +66,4 @@ jobs:
         uses: arduino/test-compile-for-arduino@v1
         with:
           fqbn: adafruit:nrf52:feather52840sense
-          sketch-path: sketches
+          sketch-path: MouseMovement
