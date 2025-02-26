@@ -1,65 +1,47 @@
-/*
-  APDS-9960 - Gesture Sensor
+/***************************************************************************
+  This is a library for the APDS9960 digital proximity, ambient light, RGB, and gesture sensor
 
-  This example reads gesture data from the on-board APDS-9960 sensor of the
-  Nano 33 BLE Sense and prints any detected gestures to the Serial Monitor.
+  This sketch puts the sensor in gesture mode and decodes gestures.
+  To use this, first put your hand close to the sensor to enable gesture mode.
+  Then move your hand about 6" from the sensor in the up -> down, down -> up, 
+  left -> right, or right -> left direction.
 
-  Gesture directions are as follows:
-  - UP:    from USB connector towards antenna
-  - DOWN:  from antenna towards USB connector
-  - LEFT:  from analog pins side towards digital pins side
-  - RIGHT: from digital pins side towards analog pins side
+  Designed specifically to work with the Adafruit APDS9960 breakout
+  ----> http://www.adafruit.com/products/3595
 
-  The circuit:
-  - Arduino Nano 33 BLE Sense
+  These sensors use I2C to communicate. The device's I2C address is 0x39
 
-  This example code is in the public domain.
-*/
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit andopen-source hardware by purchasing products
+  from Adafruit!
 
-#include <Arduino_APDS9960.h>
+  Written by Dean Miller for Adafruit Industries.
+  BSD license, all text above must be included in any redistribution
+ ***************************************************************************/
 
+#include "Adafruit_APDS9960.h"
+Adafruit_APDS9960 apds;
+
+// the setup function runs once when you press reset or power the board
 void setup() {
-  Serial.begin(9600);
-  while (!Serial);
-
-  if (!APDS.begin()) {
-    Serial.println("Error initializing APDS-9960 sensor!");
+  Serial.begin(115200);
+  
+  if(!apds.begin()){
+    Serial.println("failed to initialize device! Please check your wiring.");
   }
+  else Serial.println("Device initialized!");
 
-  // for setGestureSensitivity(..) a value between 1 and 100 is required.
-  // Higher values make the gesture recognition more sensitive but less accurate
-  // (a wrong gesture may be detected). Lower values makes the gesture recognition
-  // more accurate but less sensitive (some gestures may be missed).
-  // Default is 80
-  //APDS.setGestureSensitivity(80);
-
-  Serial.println("Detecting gestures ...");
+  //gesture mode will be entered once proximity mode senses something close
+  apds.enableProximity(true);
+  apds.enableGesture(true);
 }
+
+// the loop function runs over and over again forever
 void loop() {
-  if (APDS.gestureAvailable()) {
-    // a gesture was detected, read and print to Serial Monitor
-    int gesture = APDS.readGesture();
-
-    switch (gesture) {
-      case GESTURE_UP:
-        Serial.println("Detected UP gesture");
-        break;
-
-      case GESTURE_DOWN:
-        Serial.println("Detected DOWN gesture");
-        break;
-
-      case GESTURE_LEFT:
-        Serial.println("Detected LEFT gesture");
-        break;
-
-      case GESTURE_RIGHT:
-        Serial.println("Detected RIGHT gesture");
-        break;
-
-      default:
-        // ignore
-        break;
-    }
-  }
+  //read a gesture from the device
+    uint8_t gesture = apds.readGesture();
+    if(gesture == APDS9960_DOWN) Serial.println("v");
+    if(gesture == APDS9960_UP) Serial.println("^");
+    if(gesture == APDS9960_LEFT) Serial.println("<");
+    if(gesture == APDS9960_RIGHT) Serial.println(">");
 }
