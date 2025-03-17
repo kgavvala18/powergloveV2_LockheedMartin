@@ -2,7 +2,7 @@
 # Arduino IDE Setup
 https://learn.adafruit.com/adafruit-feather-sense/arduino-support-setup
 
-Following and paraphrasing link 1 steps 1 or 2 depending on OS
+Following and paraphrasing link steps 1 or 2 depending on OS
 # For Windows
 
 1. Download Arduino IDE at https://www.arduino.cc/en/Main/Software
