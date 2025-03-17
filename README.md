@@ -1,4 +1,61 @@
 # CSCE-Capstone---Powerglove
+# Arduino IDE Setup
+https://learn.adafruit.com/adafruit-feather-sense/arduino-support-setup
+
+Following and paraphrasing link 1 steps 1 or 2 depending on OS
+# For Windows
+
+1. Download Arduino IDE at https://www.arduino.cc/en/Main/Software
+2. Start Arduino IDE and go to preference and add https://adafruit.github.io/arduino-board-index/package_adafruit_index.json as an 'Additional Board Manager URL'
+3. Restart the IDE
+4. Open Board Manager in the Tools -> Board and install 'Adafruit nRF52 by Adafruit'
+5. After install use Tools -> Board to select Adafruit Feather nRF52840 Sense 
+
+
+Windows Users will likely need to install the following two links
+Select all options when installing below
+https://learn.adafruit.com/adafruit-arduino-ide-setup/windows-driver-installation
+CP210x Windows Drivers option is what I had to choose
+https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads
+
+# For Linux
+
+Follow above windows steps and then follow below if python3 is not installed already
+
+Linux Users will likely need to install https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers
+
+1. Run `$ sudo apt-get install python3`
+2. Run `$ pip3 install --user adafruit-nrfutil`
+3. Add to path if needed
+4. Ensure adafruit-nrfutil can be executed in terminal by running `$ adafruit-nrfutil version`
+
+
+# Library Manager install requirements
+
+On the left click of the Arduino IDE click the library manager(book icon) and install the following libraries. Names should be exact to name in library manager
+
+Arduino_APDS9960
+Arduino_LSM6DS3
+Adafruit APDS9960 Library
+Adafruit BMP280 Library
+Adafruit BusIO
+Adafruit LIS3MDL
+Adafruit LSM6DS
+Adafruit SHT31 Library
+Adafruit Si7021 Library
+Adafruit Unified Sensor
+LSM6
+
+# How to run on Arduino IDE
+
+After steps above plug in the Adafruit Feather nRF52840 Sense and Upload your code with the Arduino IDE.
+
+Ensure COMM port is correct for the connection to the board.
+
+## Debug
+If updating the board user might need to open up glove and click the button on the board to update what it runs.
+
+# Git Commands
 
 ## Branching
 
