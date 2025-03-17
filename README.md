@@ -2,8 +2,9 @@
 # Arduino IDE Setup
 https://learn.adafruit.com/adafruit-feather-sense/arduino-support-setup
 
-Following and paraphrasing link steps 1 or 2 depending on OS
-# For Windows
+Follow steps below depending on OS
+
+# For Windows and Linux
 
 1. Download Arduino IDE at https://www.arduino.cc/en/Main/Software
 2. Start Arduino IDE and go to preference and add https://adafruit.github.io/arduino-board-index/package_adafruit_index.json as an 'Additional Board Manager URL'
@@ -11,6 +12,7 @@ Following and paraphrasing link steps 1 or 2 depending on OS
 4. Open Board Manager in the Tools -> Board and install 'Adafruit nRF52 by Adafruit'
 5. After install use Tools -> Board to select Adafruit Feather nRF52840 Sense 
 
+# For Windows Only
 
 Windows Users will likely need to install the following two links
 Select all options when installing below
@@ -18,7 +20,7 @@ https://learn.adafruit.com/adafruit-arduino-ide-setup/windows-driver-installatio
 CP210x Windows Drivers option is what I had to choose
 https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads
 
-# For Linux
+# For Linux Only 
 
 Follow above windows steps and then follow below if python3 is not installed already
 
