@@ -137,17 +137,92 @@ void loop()
         blehid.mouseButtonRelease();
       break;
 
-      case '['
+      case '[':
         blehid.keyPress(0x01);
         blehid.mouseScroll(-1);
         blehid.mouseScroll(0);
         blehid.keyRelease();
       break;
 
-      case ']'
+      case ']':
         blehid.keyPress(0x01);
         blehid.mouseScroll(1);
         blehid.mouseScroll(0);
+        blehid.keyRelease();
+      break;
+
+      case '1': //alt f4
+        blehid.keyPress(0xE2);
+        blehid.keyPress(0x3D);
+        blehid.keyRelease();
+      break;
+
+      case '2': //alt tab
+        blehid.keyPress(0xE2);
+        blehid.keyPress(0x2B);
+        blehid.keyRelease();
+      break;
+
+      case '3': //alt shift tab
+        blehid.keyPress(0xE2);
+        blehid.keyPress(0xE1);
+        blehid.keyPress(0x2B);
+        blehid.keyRelease();
+      break;
+
+      case '4': //win d
+        blehid.keyPress(0xE3);
+        blehid.keyPress(0x07);
+        blehid.keyRelease();
+      break;
+
+      case '5': //win L
+        blehid.keyPress(0xE3);
+        blehid.keyPress(0x0F);
+        blehid.keyRelease();
+      break;
+
+      case '6': // win e
+        blehid.keyPress(0xE3);
+        blehid.keyPress(0x08);
+        blehid.keyRelease();
+      break;
+
+      case '7': // snip
+        blehid.keyPress(0xE3);
+        blehid.keyPress(0xE1);
+        blehid.keyPress(0x16);
+        blehid.keyRelease();
+      break;
+
+      case '8': // printscreen
+        blehid.keyPress(0xE2); 
+        blehid.keyPress(0x46); //doesnt send extra codes from modifying keys?
+        blehid.keyRelease();
+      break;
+
+      case '9': // ctrl shift m
+        blehid.keyPress(0xE0);
+        blehid.keyPress(0xE1);
+        blehid.keyPress(0x10);
+        blehid.keyRelease();
+      break;
+
+      case '0': // win home
+        blehid.keyPress(0xE3);
+        blehid.keyPress(0x4A);
+        blehid.keyRelease();
+      break;
+
+      case 'c': // copy
+        blehid.keyPress(0xE0);
+        blehid.keyPress(0x06);
+        blehid.keyRelease();
+      break;
+
+      case 'v': // paste
+        blehid.keyPress(0xE0);
+        blehid.keyPress(0x19);
         blehid.keyRelease();
       break;
 
@@ -155,4 +230,3 @@ void loop()
     }
   }
 }
-
