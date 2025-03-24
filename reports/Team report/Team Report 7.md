@@ -6,11 +6,8 @@
 
 **Members**: David, Grant, Brint, Kris, Aaron, Will
 
-*
-
 ## Status Report
 
-*Write a one-third to one-half page status report describing the team’s overall progress and challenges faced last week. Also discuss the team’s goals and plan for this week.*
 The team's overall progress is good. The glove is coming together swiftly and although we have had some setbacks from members being sick, progress has been good.
 There has been work on hooking up the buttons to the encoders, getting everything soldered for the status demo, and some more mouse movement along with some gestures.
 We have made progress on the 3D printing side but are having difficulties with the strange geometry of the parts we are trying to print for. The GUI has made progress
