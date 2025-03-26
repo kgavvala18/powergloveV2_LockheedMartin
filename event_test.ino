@@ -90,7 +90,8 @@ void loop()
     
     // echo
     Serial.println(ch);
-  
+    uint8_t emptyKeycode[6] = {0};
+    uint8_t activeKey[6] = {0};
     switch(ch)
     {
       // WASD to move the mouse
@@ -138,91 +139,104 @@ void loop()
       break;
 
       case '[':
-        blehid.keyPress(0x01);
+           
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode);  // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
         blehid.mouseScroll(-1);
         blehid.mouseScroll(0);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
         blehid.keyRelease();
       break;
 
       case ']':
-        blehid.keyPress(0x01);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode);  // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
         blehid.mouseScroll(1);
         blehid.mouseScroll(0);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
         blehid.keyRelease();
       break;
 
       case '1': //alt f4
-        blehid.keyPress(0xE2);
-        blehid.keyPress(0x3D);
+        activeKey[0] = 0x3D;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
-      case '2': //alt tab
-        blehid.keyPress(0xE2);
-        blehid.keyPress(0x2B);
+    case '2': //alt tab //works but not as intended, only swaps between most recent tabs instead of allowing scrolling
+        activeKey[0] = 0x2B;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
-      case '3': //alt shift tab
-        blehid.keyPress(0xE2);
-        blehid.keyPress(0xE1);
-        blehid.keyPress(0x2B);
+      case '3': //alt shift tab //might change to a polling event were a finger trigger holds alt and cant hit tab as many times as you want until release
+        activeKey[0] = 0x2B;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x24, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '4': //win d
-        blehid.keyPress(0xE3);
-        blehid.keyPress(0x07);
+        activeKey[0] = 0x07;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x08, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '5': //win L
-        blehid.keyPress(0xE3);
-        blehid.keyPress(0x0F);
+        activeKey[0] = 0x0f;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x08, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '6': // win e
-        blehid.keyPress(0xE3);
-        blehid.keyPress(0x08);
+        activeKey[0] = 0x08;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x08, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '7': // snip
-        blehid.keyPress(0xE3);
-        blehid.keyPress(0xE1);
-        blehid.keyPress(0x16);
+        activeKey[0] = 0x16;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x28, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '8': // printscreen
-        blehid.keyPress(0xE2); 
-        blehid.keyPress(0x46); //doesnt send extra codes from modifying keys?
+        activeKey[0] = 0x46;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
-      case '9': // ctrl shift m
-        blehid.keyPress(0xE0);
-        blehid.keyPress(0xE1);
-        blehid.keyPress(0x10);
+      case '9': // ctrl win 1
+        activeKey[0] = 0x1e;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x28, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
       case '0': // win home
-        blehid.keyPress(0xE3);
-        blehid.keyPress(0x4A);
+        activeKey[0] = 0x4A;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x08, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
-      case 'c': // copy
-        blehid.keyPress(0xE0);
-        blehid.keyPress(0x06);
+      case 'c': // copy //not working
+        activeKey[0] = 0x06;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, activeKey);
+        delay(10000);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
-      case 'v': // paste
-        blehid.keyPress(0xE0);
-        blehid.keyPress(0x19);
+      case 'v': // paste //not working
+        activeKey[0] = 0x19;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x02, activeKey);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
       break;
 
