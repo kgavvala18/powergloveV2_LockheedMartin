@@ -16,7 +16,7 @@
 
 _Include screenshots/diagrams/figures/etc. to illustrate what you did this past week._
 
-![Alt text](IMG_2999.JPG.jpg?raw=true "New board with encoders and buttons wired together.")
+![Alt text](./IMG_2999.JPG.jpg?raw=true "New board with encoders and buttons wired together.")
 
 ### What problems did you run into? What is your plan for them?
 
