@@ -1,4 +1,3 @@
-// this is an extended kalman filter implemented in c++
 
 #include <math.h>
 #include <stdbool.h>
@@ -280,7 +279,7 @@ static void ekf_predict(
     const _float_t Q[EKF_N * EKF_N])
 {
     // \hat{x}_k = f(\hat{x}_{k-1}, u_k)
-    memcpy(ekf->x, fx, EKF_N * sizeof(_float_t)); //
+    memcpy(ekf->x, fx, EKF_N * sizeof(_float_t));  //
 
     // P_k = F_{k-1} P_{k-1} F^T_{k-1} + Q_{k-1}
 
