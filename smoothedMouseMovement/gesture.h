@@ -15,7 +15,7 @@ enum STRENGTH
     MEDIUM,
     LOW,
     NONE
-}
+};
 
 enum GESTURES
 {
