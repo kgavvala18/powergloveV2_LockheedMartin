@@ -33,7 +33,7 @@ The goals for this coming week are to finish assembling the glove and getting ev
 
 | From Whom | Feedback | Next Steps |
 | :---- | :---- | :---- |
-|  |  |  |
+| Ritchey | Get predefined gestures working and assignable | Detect different gestures |
 |  |  |  |
 
 3. Are any resources needed? If so, what?
