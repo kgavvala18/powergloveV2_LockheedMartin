@@ -9,6 +9,14 @@
 #define RING_THRES 50  // to be determined
 #define PINKY_THRES 50 // to be determined
 
+enum STRENGTH
+{
+    HIGH,
+    MEDIUM,
+    LOW,
+    NONE
+};
+
 enum GESTURES
 {
     /*
