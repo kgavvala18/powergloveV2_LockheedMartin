@@ -1,46 +1,43 @@
 
-#define EKF_N 4  //  Y angdisp, Y angvel, Z angdisp, Z angvel, right, left
-#define EKF_M 2  //  Y angvel, Z angvel, right, left
+#define EKF_N 4 //  Y angdisp, Y angvel, Z angdisp, Z angvel, right, left
+#define EKF_M 2 //  Y angvel, Z angvel, right, left
 
-//#include <bluefruit.h>
-//#include <Adafruit_NeoPixel.h>
+// #include <bluefruit.h>
+// #include <Adafruit_NeoPixel.h>
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_Sensor.h>
 #include <tinyekf.h>
-//#include <Mouse.h>
+// #include <Mouse.h>
 #include <math.h>
 #include <Adafruit_TinyUSB.h>
 
 // BLEDis bledis;
 // BLEHidAdafruit blehid;
 
-//HID report descriptor using TinyUSB's template
-//Single Report (no ID) descriptor
+// HID report descriptor using TinyUSB's template
+// Single Report (no ID) descriptor
 uint8_t const desc_hid_report[] = {
-  TUD_HID_REPORT_DESC_MOUSE()
-};
+    TUD_HID_REPORT_DESC_MOUSE()};
 
 // USB HID object
 Adafruit_USBD_HID usb_hid;
-
 
 static const float EPS = 1.5e-7;
 
 static const float Q[EKF_N * EKF_N] = {
 
-  EPS, 0, 0, 0,
-  0, EPS * 10, 0, 0,
-  0, 0, EPS, 0,
-  0, 0, 0, EPS * 10
-};
+    EPS, 0, 0, 0,
+    0, EPS * 10, 0, 0,
+    0, 0, EPS, 0,
+    0, 0, 0, EPS * 10};
 
-static const float R[EKF_M * EKF_M] = {
-  // 2x2
+static const float ER[EKF_M * EKF_M] = {
+    // 2x2
 
-  0.002,
-  0,
-  0,
-  0.002
+    0.002,
+    0,
+    0,
+    0.002
 
 };
 
@@ -53,14 +50,14 @@ static const float R[EKF_M * EKF_M] = {
 // };
 
 static const float H[EKF_M * EKF_N] = {
-  0,
-  1,
-  0,
-  0,
-  0,
-  0,
-  0,
-  1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
 };
 
 static ekf_t _ekf;
@@ -73,44 +70,48 @@ float prev;
 float curr;
 float dt = 0.01;
 
-int sensorpin0 = A0;  // ring flex sensor pin
-int sensorpin1 = A1;  // middle flex sensor pin
-int sensorpin2 = A2;  // flex sensor pin
-int sensorpin3 = A3;  // pointer sensor pin
-int sensorpin4 = A4;  // pinky sensor pin
+int sensorpin0 = A0; // ring flex sensor pin
+int sensorpin1 = A1; // middle flex sensor pin
+int sensorpin2 = A2; // flex sensor pin
+int sensorpin3 = A3; // pointer sensor pin
+int sensorpin4 = A4; // pinky sensor pin
 
-int sensor0;  //ring
-int sensor1;  //middle
-int sensor2;  //middle
-int sensor3;  //middle
-int sensor4;  //middle
+int sensor0; // ring
+int sensor1; // middle
+int sensor2; // middle
+int sensor3; // middle
+int sensor4; // middle
 
 int leftclick = 0;
 int rightclick = 0;
 int laser = 0;
 uint8_t buttons = 0;
 
-uint8_t const report_id = 0;  // no ID
+uint8_t const report_id = 0; // no ID
 
-//float F[EKF_N*EKF_N];
+// float F[EKF_N*EKF_N];
 
 // the setup routine runs once when you press reset:
-void setup() {
+void setup()
+{
 
-  const float Pdiag[EKF_N] = { 0.001, 0.001, 0.001, 0.001 };
+  const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001};
 
   ekf_initialize(&_ekf, Pdiag);
 
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial)
+    delay(10);
 
   Serial.println("Motion Control Glove - Starting");
 
-  //if (!sox.begin_I2C()) {
-  if (!sox.begin_SPI(1)) {
+  // if (!sox.begin_I2C()) {
+  if (!sox.begin_SPI(1))
+  {
     // if (!sox.begin_SPI(LSM_CS, LSM_SCK, LSM_MISO, LSM_MOSI)) {
     // Serial.println("Failed to find LSM6DSOX chip");
-    while (1) {
+    while (1)
+    {
       delay(10);
     }
   }
@@ -122,8 +123,8 @@ void setup() {
   sox.setAccelDataRate(LSM6DS_RATE_208_HZ);
   sox.setGyroDataRate(LSM6DS_RATE_208_HZ);
 
-
-  if (!TinyUSBDevice.isInitialized()) {
+  if (!TinyUSBDevice.isInitialized())
+  {
     TinyUSBDevice.begin(0);
   }
 
@@ -135,12 +136,12 @@ void setup() {
   usb_hid.begin();
 
   // If already enumerated, additional class driverr begin() e.g msc, hid, midi won't take effect until re-enumeration
-  if (TinyUSBDevice.mounted()) {
+  if (TinyUSBDevice.mounted())
+  {
     TinyUSBDevice.detach();
     delay(10);
     TinyUSBDevice.attach();
   }
-
 
   // Bluefruit.begin();
   // // HID Device can have a min connection interval of 9*1.25 = 11.25 ms
@@ -161,10 +162,11 @@ void setup() {
 }
 
 // the loop routine runs over and over again forever:
-void loop() {
+void loop()
+{
 
-  sensor0 = analogRead(sensorpin0);  //ring
-  sensor1 = analogRead(sensorpin1); //middle
+  sensor0 = analogRead(sensorpin0); // ring
+  sensor1 = analogRead(sensorpin1); // middle
 
   sensor2 = analogRead(sensorpin2);
   sensor3 = analogRead(sensorpin3);
@@ -180,7 +182,6 @@ void loop() {
   sensors_event_t temp;
   sox.getEvent(&accel, &gyro, &temp);
 
-
   float ax = accel.acceleration.x;
   float ay = accel.acceleration.y + 0.32;
   float az = accel.acceleration.z - 10.03;
@@ -189,30 +190,26 @@ void loop() {
   float gy = 0.01 + gyro.gyro.y;
   float gz = 0.01 + gyro.gyro.z;
 
-
-  const float z[EKF_M] = { gy, gz };
+  const float z[EKF_M] = {gy, gz};
 
   const float F[EKF_N * EKF_N] = {
-    1, dt, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, dt,
-    0, 0, 0, 1
-  };
+      1, dt, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, dt,
+      0, 0, 0, 1};
   // Process model is f(x) = x
-  const float fx[EKF_N] = { _ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3] };  // velocity y , velocity z
+  const float fx[EKF_N] = {_ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3]}; // velocity y , velocity z
 
   // Run the prediction step of the DKF
   ekf_predict(&_ekf, fx, F, Q);
 
-
-  const float hx[EKF_M] = { _ekf.x[1], _ekf.x[3] };
+  const float hx[EKF_M] = {_ekf.x[1], _ekf.x[3]};
   //   hx[2] = .9987 * this->x[1] + .001;
 
-  //const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1] };
+  // const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1] };
 
   // Run the update step
-  ekf_update(&_ekf, z, hx, H, R);
-
+  ekf_update(&_ekf, z, hx, H, ER);
 
   // if (abs(gy) > 0.05 || abs(gz) > 0.8){
   //   vy = 20*tan(gy);
@@ -233,12 +230,7 @@ void loop() {
   // int8_t x = mz;  // Replace with your x value
   // int8_t y = my;   // Replace with your y value
 
-
-
-
-  //blehid.mouseMove(mz, my);
-
-
+  // blehid.mouseMove(mz, my);
 
 #ifdef TINYUSB_NEED_POLLING_TASK
   // Manual call tud_task since it isn't called by Core's background
@@ -246,87 +238,105 @@ void loop() {
 #endif
 
   // not enumerated()/mounted() yet: nothing to do
-  if (!TinyUSBDevice.mounted()) {
+  if (!TinyUSBDevice.mounted())
+  {
     return;
   }
   // Remote wakeup
-  if (TinyUSBDevice.suspended()) {
+  if (TinyUSBDevice.suspended())
+  {
     // Wake up host if we are in suspend mode
     // and REMOTE_WAKEUP feature is enabled by host
     TinyUSBDevice.remoteWakeup();
   }
 
-  if (usb_hid.ready()) {
+  if (usb_hid.ready())
+  {
 
     // Convert to int8_t (scaling if needed)
-    //int8_t deltaX = limit_xy(mz);
-    //int8_t deltaY = limit_xy(my);
+    // int8_t deltaX = limit_xy(mz);
+    // int8_t deltaY = limit_xy(my);
 
-    //Serial.print(deltaX);Serial.print(",");
-    //Serial.print(deltaY);Serial.print(",");
-    if (rightclick) {  
-      if (sensor0 < 40) {
+    // Serial.print(deltaX);Serial.print(",");
+    // Serial.print(deltaY);Serial.print(",");
+    if (rightclick)
+    {
+      if (sensor0 < 40)
+      {
         rightclick = 0;
         Serial.print("right released");
 
-        //usb_hid.mouseButtonRelease(report_id);
+        // usb_hid.mouseButtonRelease(report_id);
         delay(10);
       }
-    } else {
-      if (sensor0 > 55) {
+    }
+    else
+    {
+      if (sensor0 > 55)
+      {
         Serial.println("right click!: " + String(sensor0));
         rightclick = 1;
-        //usb_hid.mouseButtonPress(report_id, MOUSE_BUTTON_RIGHT);
-        // Small delay to simulate a real click
-        delay(10);  //may remove
+        // usb_hid.mouseButtonPress(report_id, MOUSE_BUTTON_RIGHT);
+        //  Small delay to simulate a real click
+        delay(10); // may remove
       }
     }
 
-    //left mouse button
-    if (leftclick) {
-      if (sensor1 < 40) {
+    // left mouse button
+    if (leftclick)
+    {
+      if (sensor1 < 40)
+      {
         leftclick = 0;
         Serial.print("left released");
-        //usb_hid.mouseButtonRelease(report_id);
+        // usb_hid.mouseButtonRelease(report_id);
         delay(10);
       }
     }
-    else {
-      if (sensor1 > 50) {
+    else
+    {
+      if (sensor1 > 50)
+      {
         leftclick = 1;
         Serial.println("left click!: " + String(sensor0));
-        //usb_hid.mouseButtonPress
+        // usb_hid.mouseButtonPress
       }
     }
 
     buttons = 0;
-    if (leftclick) {
+    if (leftclick)
+    {
       buttons = MOUSE_BUTTON_LEFT;
     }
-    else if (rightclick) {
+    else if (rightclick)
+    {
       buttons = MOUSE_BUTTON_RIGHT;
-    } 
+    }
 
-    int8_t deltaX = (int8_t)mz;  // Convert float to int8_t
-    int8_t deltaY = (int8_t)my;  // Convert float to int8_t
+    int8_t deltaX = (int8_t)mz; // Convert float to int8_t
+    int8_t deltaY = (int8_t)my; // Convert float to int8_t
 
     // Send movement with the correct button state
     usb_hid.mouseReport(report_id, buttons, deltaX, -deltaY, 0, 0);
   }
 
-  if (laser == 0){
-    if (sensor2 > 75){
+  if (laser == 0)
+  {
+    if (sensor2 > 75)
+    {
       laser = 1;
-      digitalWrite(A5, HIGH);  // Turn the pin on (set it HIGH)
+      digitalWrite(A5, HIGH); // Turn the pin on (set it HIGH)
     }
   }
-  else {
-    if (sensor2 < 75){
-      laser = 0;          
-      digitalWrite(A5, LOW);   // Turn the pin off (set it LOW)
+  else
+  {
+    if (sensor2 < 75)
+    {
+      laser = 0;
+      digitalWrite(A5, LOW); // Turn the pin off (set it LOW)
     }
   }
-  
+
   // Serial.print(_ekf.x[1]); Serial.print(",");
   // Serial.print(_ekf.x[3]); Serial.print(",");
   // Serial.print(gy); Serial.print(",");
@@ -336,29 +346,26 @@ void loop() {
   // Serial.print(ay); Serial.print(",");
   // Serial.print(az); Serial.print(",");
 
+  Serial.print(sensor0); // middle
+  Serial.print(",");
+  Serial.print(sensor1); // pointer
+  Serial.print(",");
 
-  Serial.print(sensor0); //middle
+  Serial.print(sensor2); // thumb
   Serial.print(",");
-  Serial.print(sensor1);  //pointer
+  Serial.print(sensor3); // ring
   Serial.print(",");
+  Serial.print(sensor4); // pinky
 
-  Serial.print(sensor2); //thumb
-  Serial.print(",");
-  Serial.print(sensor3); //ring
-  Serial.print(",");
-  Serial.print(sensor4); //pinky
-  
-  //Serial.print("right state: ");
-  // Serial.print(rightclick);
-  // Serial.print(",");
-  // //Serial.print("left state: ");
-  // Serial.print(leftclick);
-  // Serial.print(",");
-  // Serial.print(curr / 1000.000);
+  // Serial.print("right state: ");
+  //  Serial.print(rightclick);
+  //  Serial.print(",");
+  //  //Serial.print("left state: ");
+  //  Serial.print(leftclick);
+  //  Serial.print(",");
+  //  Serial.print(curr / 1000.000);
   Serial.println();
 }
-
-
 
 // void startAdv(void)
 // {
@@ -374,8 +381,6 @@ void loop() {
 //   Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_MOUSE);
 
 //   // Include BLE HID service
-
-
 
 //   Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_MOUSE);
 
@@ -399,4 +404,3 @@ void loop() {
 //   Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
 //   Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds
 // }
-
