@@ -310,6 +310,7 @@ void loop()
 
   ////
   ////GESTURE TESTING
+
   Serial.println(gesture(thumb_1, pointer_1, middle_1, ring_1, pinky_1));
 
   Gestures gesture_ = gesture(thumb, pointer_1, middle_1, ring, pinky);
@@ -341,19 +342,20 @@ void loop()
   {
   case MOUSE_IDLE:
     // At idle, check if we have a new left-click or drag gesture.
-    if (gesture_ == R) // should be I
+
+    if (gesture_ == RP) // should be TI
+    {
+      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
+      // A TI signal represents the start of a drag even
+      leftState = DRAG_EVENT;
+    }
+    else if (gesture_ == R) // should be I
     {
       // Initiate a discrete left-click event.
       // (According to our grammar, a click is I followed by NONE.)
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
       leftState = CLICK_EVENT;
       mouseEnabled = false;
-    }
-    else if (gesture_ == RP) // should be TI
-    {
-      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-      // A TI signal represents the start of a drag even
-      leftState = DRAG_EVENT;
     }
     break;
 
@@ -364,6 +366,11 @@ void loop()
       mouseEnabled = true;
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       leftState = MOUSE_IDLE;
+    }
+    else if (gesture_ == RP) // should be TI
+    {
+      mouseEnabled = true;
+      leftState = DRAG_EVENT;
     }
     break;
 
@@ -506,6 +513,13 @@ void loop()
       digitalWrite(A5, LOW);
       laserState = LASER_IDLE;
     }
+    else if (gesture_ == RP) // should be TI
+    {
+      mouseEnabled = true;
+      digitalWrite(A5, LOW);
+      leftState = CLICK_EVENT;
+      laserState = LASER_IDLE;
+    }
     break;
   }
 
@@ -526,20 +540,24 @@ void loop()
 
   // Serial.print(leftclick);
   // Serial.print(",");
-
+  Serial.print("thumb: ");
   Serial.print(thumb_1); // middle
-  Serial.print(",");
+  // Serial.print(",");
 
+  Serial.print(" pointer: ");
   Serial.print(pointer_1); // pointer
-  Serial.print(",");
+  // Serial.print(",");
+  Serial.print(" middle: ");
   Serial.print(middle_1); // thumb
 
-  Serial.print(",");
+  // Serial.print(",");
+  Serial.print(" ring: ");
   Serial.print(ring_1); // ring
-  Serial.print(",");
+                        // Serial.print(",");
 
+  Serial.print(" pinky: ");
   Serial.print(pinky_1); // pinky
-  Serial.print(",");
+  // Serial.print(",");
 
   Serial.print(curr / 1000.000);
   Serial.println();
