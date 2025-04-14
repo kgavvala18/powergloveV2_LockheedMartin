@@ -343,13 +343,13 @@ void loop()
   case MOUSE_IDLE:
     // At idle, check if we have a new left-click or drag gesture.
 
-    if (gesture_ == RP) // should be TI
+    if (gesture_ == TI)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
       // A TI signal represents the start of a drag even
       leftState = DRAG_EVENT;
     }
-    else if (gesture_ == R) // should be I
+    else if (gesture_ == I)
     {
       // Initiate a discrete left-click event.
       // (According to our grammar, a click is I followed by NONE.)
@@ -367,7 +367,7 @@ void loop()
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       leftState = MOUSE_IDLE;
     }
-    else if (gesture_ == RP) // should be TI
+    else if (gesture_ == TI)
     {
       mouseEnabled = true;
       leftState = DRAG_EVENT;
@@ -456,7 +456,7 @@ void loop()
   switch (scrollState)
   {
   case SCROLL_IDLE:
-    if (gesture_ == T) // should be TRP
+    if (gesture_ == TRP)
     {
       mouseEnabled = false;
 
@@ -498,7 +498,7 @@ void loop()
   switch (laserState)
   {
   case LASER_IDLE:
-    if (gesture_ == P) // should be T
+    if (gesture_ == T)
     {
       mouseEnabled = false;
       digitalWrite(A5, HIGH);
@@ -513,7 +513,7 @@ void loop()
       digitalWrite(A5, LOW);
       laserState = LASER_IDLE;
     }
-    else if (gesture_ == RP) // should be TI
+    else if (gesture_ == TI)
     {
       mouseEnabled = true;
       digitalWrite(A5, LOW);
