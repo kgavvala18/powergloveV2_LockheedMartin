@@ -76,7 +76,7 @@ typedef enum Gestures
 } Gestures;
 
 /// @private
-Gestures threshGesture(float thumb, float index, float middle, float ring, float pinky)
+Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
 {
     bool thumbBool, indexBool, middleBool, ringBool, pinkyBool;
 
@@ -170,33 +170,4 @@ Gestures threshGesture(float thumb, float index, float middle, float ring, float
     default:
         return NONE;
     }
-}
-
-Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
-{
-    constexpr int REQUIRED_STABLE_COUNT = 3;
-    static int stableCount = 0;
-    
-    // Static storage to keep state between calls.
-    static Gestures lastStableGesture = NONE;
-
-    // Compute candidate gesture from thresholds (ignoring stability).
-    Gestures candidateGesture = threshGesture(thumb, index, middle, ring, pinky);
-
-    if (candidateGesture != lastStableGesture)
-        {
-            stableCount++;
-            if (stableCount >= REQUIRED_STABLE_COUNT)
-            {
-                lastStableGesture = candidateGesture;
-                stableCount = 0;
-            }
-        }
-    else
-        {
-            // Our candidate is identical to our stored gesture; consider it stable.
-            stableCount = REQUIRED_STABLE_COUNT;
-        }
-
-    return lastStableGesture;
 }
