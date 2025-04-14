@@ -13,9 +13,6 @@ converting this to use on the feather nRF52840 sense board with BLe HID
 #define EKF_M 5 //  Measurements: Y ang vel, Z ang vel, pointer, middle, thumb
 // Want 7: Y lin Acc, Z lin Acc, Y ang Vel, Z ang Vel, pointer, middle, thumb
 
-#define fist 1
-#define none 0
-
 #include <bluefruit.h>
 // #include <Adafruit_NeoPixel.h>
 #include <Adafruit_LSM6DSOX.h>
