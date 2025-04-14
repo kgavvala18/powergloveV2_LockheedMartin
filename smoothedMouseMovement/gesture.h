@@ -9,17 +9,6 @@
 #define RING_THRES 50  // to be determined
 #define PINKY_THRES 50 // to be determined
 
-static constexpr float THUMB_MEAN = 70.74102628811778f;
-static constexpr float THUMB_STD = 14.03024956789845f;
-static constexpr float INDEX_MEAN = 40.35706988843323f;
-static constexpr float INDEX_STD = 9.874159515428804f;
-static constexpr float MIDDLE_MEAN = 54.75783806519453f;
-static constexpr float MIDDLE_STD = 16.56953736860662f;
-static constexpr float RING_MEAN = 0.08021313543638275f;
-static constexpr float RING_STD = 0.3653566227998348f;
-static constexpr float PINKY_MEAN = 46.55428675707886f;
-static constexpr float PINKY_STD = 13.14342743761899f;
-
 typedef enum Gestures
 {
     /*
