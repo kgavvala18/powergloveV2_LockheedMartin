@@ -174,30 +174,16 @@ Gestures threshGesture(float thumb, float index, float middle, float ring, float
 
 Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
 {
-    // Number of consecutive stable samples required before accepting a new gesture.
-    constexpr int REQUIRED_STABLE_COUNT = 3; // adjust as needed
-
+    constexpr int REQUIRED_STABLE_COUNT = 3;
+    static int stableCount = 0;
+    
     // Static storage to keep state between calls.
     static Gestures lastStableGesture = NONE;
-    static int stableCount = 0;
-
-    // Check stability for each finger reading using ±1 std deviation window.
-    bool stableThumb = (thumb >= (THUMB_MEAN - THUMB_STD)) && (thumb <= (THUMB_MEAN + THUMB_STD));
-    bool stableIndex = (index >= (INDEX_MEAN - INDEX_STD)) && (index <= (INDEX_MEAN + INDEX_STD));
-    bool stableMiddle = (middle >= (MIDDLE_MEAN - MIDDLE_STD)) && (middle <= (MIDDLE_MEAN + MIDDLE_STD));
-    bool stableRing = (ring >= (RING_MEAN - RING_STD)) && (ring <= (RING_MEAN + RING_STD));
-    bool stablePinky = (pinky >= (PINKY_MEAN - PINKY_STD)) && (pinky <= (PINKY_MEAN + PINKY_STD));
-
-    bool currentlyStable = stableThumb && stableIndex && stableMiddle && stableRing && stablePinky;
 
     // Compute candidate gesture from thresholds (ignoring stability).
     Gestures candidateGesture = threshGesture(thumb, index, middle, ring, pinky);
 
-    if (currentlyStable)
-    {
-        // If the candidate gesture differs from our stored (last stable) gesture,
-        // count how many consecutive times we see it.
-        if (candidateGesture != lastStableGesture)
+    if (candidateGesture != lastStableGesture)
         {
             stableCount++;
             if (stableCount >= REQUIRED_STABLE_COUNT)
@@ -206,17 +192,11 @@ Gestures gesture(float thumb, float index, float middle, float ring, float pinky
                 stableCount = 0;
             }
         }
-        else
+    else
         {
             // Our candidate is identical to our stored gesture; consider it stable.
-            stableCount = REQUIRED_STABLE_COUNT; // reset counter (or leave it at max)
+            stableCount = REQUIRED_STABLE_COUNT;
         }
-    }
-    else
-    {
-        // If not stable, do not update the stored gesture.
-        stableCount = 0;
-    }
 
     return lastStableGesture;
 }
