@@ -3,21 +3,24 @@
 #include <string.h>
 
 // threshholds
-#define THUMB_THRES 75
+#define THUMB_THRES 60
 #define INDEX_THRES 40
 #define MIDDLE_THRES 50
 #define RING_THRES 50  // to be determined
 #define PINKY_THRES 50 // to be determined
 
-enum STRENGTH
-{
-    HIGH,
-    MEDIUM,
-    LOW,
-    NONE
-};
+static constexpr float THUMB_MEAN = 70.74102628811778f;
+static constexpr float THUMB_STD = 14.03024956789845f;
+static constexpr float INDEX_MEAN = 40.35706988843323f;
+static constexpr float INDEX_STD = 9.874159515428804f;
+static constexpr float MIDDLE_MEAN = 54.75783806519453f;
+static constexpr float MIDDLE_STD = 16.56953736860662f;
+static constexpr float RING_MEAN = 0.08021313543638275f;
+static constexpr float RING_STD = 0.3653566227998348f;
+static constexpr float PINKY_MEAN = 46.55428675707886f;
+static constexpr float PINKY_STD = 13.14342743761899f;
 
-enum GESTURES
+typedef enum Gestures
 {
     /*
     Having a letter implies that the finger is flexed.
@@ -70,12 +73,13 @@ enum GESTURES
 
     // no gesture
     NONE
-};
+} Gestures;
 
 /// @private
-enum GESTURES gesture(float thumb, float index, float middle, float ring, float pinky)
+Gestures threshGesture(float thumb, float index, float middle, float ring, float pinky)
 {
     bool thumbBool, indexBool, middleBool, ringBool, pinkyBool;
+
     thumbBool = thumb > THUMB_THRES;
     indexBool = index > INDEX_THRES;
     middleBool = middle > MIDDLE_THRES;
@@ -166,4 +170,53 @@ enum GESTURES gesture(float thumb, float index, float middle, float ring, float 
     default:
         return NONE;
     }
+}
+
+Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
+{
+    // Number of consecutive stable samples required before accepting a new gesture.
+    constexpr int REQUIRED_STABLE_COUNT = 3; // adjust as needed
+
+    // Static storage to keep state between calls.
+    static Gestures lastStableGesture = NONE;
+    static int stableCount = 0;
+
+    // Check stability for each finger reading using ±1 std deviation window.
+    bool stableThumb = (thumb >= (THUMB_MEAN - THUMB_STD)) && (thumb <= (THUMB_MEAN + THUMB_STD));
+    bool stableIndex = (index >= (INDEX_MEAN - INDEX_STD)) && (index <= (INDEX_MEAN + INDEX_STD));
+    bool stableMiddle = (middle >= (MIDDLE_MEAN - MIDDLE_STD)) && (middle <= (MIDDLE_MEAN + MIDDLE_STD));
+    bool stableRing = (ring >= (RING_MEAN - RING_STD)) && (ring <= (RING_MEAN + RING_STD));
+    bool stablePinky = (pinky >= (PINKY_MEAN - PINKY_STD)) && (pinky <= (PINKY_MEAN + PINKY_STD));
+
+    bool currentlyStable = stableThumb && stableIndex && stableMiddle && stableRing && stablePinky;
+
+    // Compute candidate gesture from thresholds (ignoring stability).
+    Gestures candidateGesture = threshGesture(thumb, index, middle, ring, pinky);
+
+    if (currentlyStable)
+    {
+        // If the candidate gesture differs from our stored (last stable) gesture,
+        // count how many consecutive times we see it.
+        if (candidateGesture != lastStableGesture)
+        {
+            stableCount++;
+            if (stableCount >= REQUIRED_STABLE_COUNT)
+            {
+                lastStableGesture = candidateGesture;
+                stableCount = 0;
+            }
+        }
+        else
+        {
+            // Our candidate is identical to our stored gesture; consider it stable.
+            stableCount = REQUIRED_STABLE_COUNT; // reset counter (or leave it at max)
+        }
+    }
+    else
+    {
+        // If not stable, do not update the stored gesture.
+        stableCount = 0;
+    }
+
+    return lastStableGesture;
 }

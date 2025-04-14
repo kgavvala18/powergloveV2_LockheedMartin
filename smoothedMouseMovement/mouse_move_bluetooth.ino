@@ -8,8 +8,13 @@ the KB2040 board was used to test this implmentation using usb hid and we are st
 converting this to use on the feather nRF52840 sense board with BLe HID
   */
 
-#define EKF_N 6 //  States: Y angular Velocity, Y angACC, Z angVel, Z angACC,
-#define EKF_M 4 //  Measurements Y angAcc, Z angAcc
+#define EKF_N 7 //  States: Y angular disp, Y ang vel, Z ang disp, Z ang vel, pointer, middle, thumb
+// Want 9: Y lin Acc, Y lin Vel, Z lin Acc, Z lin Vel, Y ang Vel, Z ang Vel, pointer, middle, thumb
+#define EKF_M 5 //  Measurements: Y ang vel, Z ang vel, pointer, middle, thumb
+// Want 7: Y lin Acc, Z lin Acc, Y ang Vel, Z ang Vel, pointer, middle, thumb
+
+#define fist 1
+#define none 0
 
 #include <bluefruit.h>
 // #include <Adafruit_NeoPixel.h>
@@ -17,8 +22,9 @@ converting this to use on the feather nRF52840 sense board with BLe HID
 #include <Adafruit_Sensor.h>
 #include <tinyekf.h>
 // #include <Mouse.h>
+#include <gesture.h>
 #include <math.h>
-// #include <Adafruit_TinyUSB.h>s
+#include <Adafruit_TinyUSB.h>
 
 BLEDis bledis;
 BLEHidAdafruit blehid;
@@ -33,12 +39,13 @@ static const float EPS = 1.5e-6;
 //     0, 0, 0, EPS * 10};
 static const float Q[EKF_N * EKF_N] = {
 
-    EPS, 0, 0, 0, 0, 0,
-    0, EPS * 10, 0, 0, 0, 0,
-    0, 0, EPS, 0, 0, 0,
-    0, 0, 0, EPS * 10, 0, 0,
-    0, 0, 0, 0, EPS * 10, 0,
-    0, 0, 0, 0, 0, EPS * 10};
+    EPS, 0, 0, 0, 0, 0, 0,
+    0, EPS * 10, 0, 0, 0, 0, 0,
+    0, 0, EPS, 0, 0, 0, 0,
+    0, 0, 0, EPS * 10, 0, 0, 0,
+    0, 0, 0, 0, EPS * 10, 0, 0,
+    0, 0, 0, 0, 0, EPS * 10, 0,
+    0, 0, 0, 0, 0, 0, EPS * 10};
 
 // static const float R[EKF_M * EKF_M] = {
 //     // 2x2
@@ -47,29 +54,35 @@ static const float Q[EKF_N * EKF_N] = {
 //     0,
 //     0,
 //     0.0005,
-
 // };
 
 static const float ER[EKF_M * EKF_M] = {
-    // 2x2
-
+    // USED TO BE THE R MATRIX
     0.0005,
     0,
     0,
     0,
     0,
-    0.0005,
-    0,
-    0,
-    0,
     0,
     0.0005,
     0,
     0,
     0,
     0,
+    0,
     0.0005,
-
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0005,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.0005,
 };
 
 // So process model Jacobian is identity matrix
@@ -92,10 +105,11 @@ static const float ER[EKF_M * EKF_M] = {
 // };
 
 static const float H[EKF_M * EKF_N] = {
-    0, 1, 0, 0, 0, 0,
-    0, 0, 0, 1, 0, 0,
-    0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1};
+    0, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 1};
 
 static ekf_t _ekf;
 
@@ -111,24 +125,63 @@ int sensorpin2 = A2; // thumb sensor pin
 int sensorpin3 = A3; // pointer sensor pin
 int sensorpin4 = A4; // pinky sensor pin
 
-int sensor0; // ring
-int sensor1; // middle
-int sensor2; // middle
-int sensor3; // middle
-int sensor4; // middle
+int middle;  // ring
+int pointer; // middle
+int thumb;   // middle
+int ring;    // middle
+int pinky;   // middle
 
 int leftclick = 0;
+int leftactive = 0;
 int rightclick = 0;
 int laser = 0;
 // float F[EKF_N*EKF_N];
 
+float prev_pointer_1 = -1; // Grant - added to toggle mouse movement when moving fingers
+float prev_middle_1 = -1;
+
+// needed for gesture key presses
+uint8_t emptyKeycode[6] = {0};
+uint8_t activeKey[6] = {0};
+
+bool mouseEnabled = true;
+
+enum MouseState
+{
+  MOUSE_IDLE,  // waiting for a gesture event
+  CLICK_EVENT, // detected a quick left click (I pressed; waiting for NONE to release)
+  DRAG_EVENT   // detected a drag (TI pressed; waiting for NONE to finish drag)
+};
+
+enum ZoomState
+{
+  ZOOM_IDLE,
+  ZOOM_IN,
+  ZOOM_OUT
+};
+
+enum ScrollState
+{
+  SCROLL_IDLE,
+  SCROLL_UP,
+  SCROLL_DOWN
+};
+
+enum LaserState
+{
+  LASER_IDLE,
+  LASER
+};
+
+MouseState leftState = MOUSE_IDLE;
+MouseState rightState = MOUSE_IDLE;
+ZoomState zoomState = ZOOM_IDLE;
+ScrollState scrollState = SCROLL_IDLE;
+LaserState laserState = LASER_IDLE;
+
 // the setup routine runs once when you press reset:
 void setup()
 {
-
-  const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001};
-
-  ekf_initialize(&_ekf, Pdiag);
 
   Serial.begin(115200);
   while (!Serial)
@@ -138,6 +191,9 @@ void setup()
   }
 
   Serial.println("Motion Control Glove - Starting");
+  const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001, 0.001};
+
+  ekf_initialize(&_ekf, Pdiag);
 
   if (!sox.begin_SPI(1))
   {
@@ -171,7 +227,8 @@ void setup()
 
   // Set up and start advertising
   startAdv();
-  pinMode(A5, OUTPUT);
+  pinMode(A5, OUTPUT); // move the laser to a digital pin instead of analog
+  digitalWrite(A5, LOW);
 }
 
 // the loop routine runs over and over again forever:
@@ -182,16 +239,17 @@ void loop()
   dt = (curr - prev) / 1000.0000;
   prev = curr;
 
-  sensor0 = analogRead(sensorpin0); // ring
-  sensor1 = analogRead(sensorpin1); // middle
+  middle = analogRead(sensorpin0);
+  pointer = analogRead(sensorpin1);
 
-  sensor2 = analogRead(sensorpin2);
-  sensor3 = analogRead(sensorpin3); // pointer
-  sensor4 = analogRead(sensorpin4);
+  thumb = analogRead(sensorpin2);
+  ring = analogRead(sensorpin3);
+  pinky = analogRead(sensorpin4);
 
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
+
   sox.getEvent(&accel, &gyro, &temp);
 
   float ax = accel.acceleration.x;
@@ -202,32 +260,30 @@ void loop()
   float gy = 0.01 + gyro.gyro.y;
   float gz = 0.01 + gyro.gyro.z;
 
-  const float z[EKF_M] = {gy, gz, sensor3, sensor1};
+  const float z[EKF_M] = {gy, gz, pointer, middle, thumb};
 
   const float F[EKF_N * EKF_N] = {
-      1, dt, 0, 0, 0, 0,
-      0, 1, 0, 0, 0, 0,
-      0, 0, 1, dt, 0, 0,
-      0, 0, 0, 1, 0, 0,
-      0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1};
-  // Process model is f(x) = x
-  const float fx[EKF_N] = {_ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3], _ekf.x[4], _ekf.x[5]}; // velocity y , velocity z
+      1, dt, 0, 0, 0, 0, 0,
+      0, 1, 0, 0, 0, 0, 0,
+      0, 0, 1, dt, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0,
+      0, 0, 0, 0, 1, 0, 0,
+      0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 0, 1};
+
+  // Process model f(x)
+  const float fx[EKF_N] = {_ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6]}; // velocity y , velocity z
 
   // Run the prediction step of the eKF
   ekf_predict(&_ekf, fx, F, Q);
 
-  const float hx[EKF_M] = {_ekf.x[1], _ekf.x[3], _ekf.x[4], _ekf.x[5]};
+  const float hx[EKF_M] = {_ekf.x[1], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6]};
   //   hx[2] = .9987 * this->x[1] + .001;
 
   // const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1] };
 
-  // Run the update step
+  // Run  theupdaet step
   ekf_update(&_ekf, z, hx, H, ER);
-
-  // if (abs(gy) > 0.05 || abs(gz) > 0.8){
-  //   vy = 20*tan(gy);
-  //   vx = -20*tan(gz);
 
   // }
   // else{
@@ -237,101 +293,256 @@ void loop()
 
   // scale the acceleration values by 20
   /*the scaling factor was empiricaly determined. We need to find why this works
-  to see if there may be a more opmtimal value*/
+  to see if there may be a more optimal value*/
   float my = 20 * _ekf.x[1];
   float mz = -20 * _ekf.x[3];
 
-  float sense1 = _ekf.x[4];
-  float sense0 = _ekf.x[5];
+  float pointer_1 = _ekf.x[4];
+  float middle_1 = _ekf.x[5];
+  float thumb_1 = _ekf.x[6];
+  float pinky_1 = pinky;
+  float ring_1 = ring;
 
-  blehid.mouseMove(mz, my);
+  if (mouseEnabled)
+  {
+    blehid.mouseMove(mz, my);
+  }
 
-  Serial.println(gesture(thumb, index, middle, ring, pinky));
+  ////
+  ////GESTURE TESTING
+  Serial.println(gesture(thumb_1, pointer_1, middle_1, ring_1, pinky_1));
 
-  // if(sense1 > 40){
-  //   //Serial.println("click!: " + String(sensor0));
-  //   blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
-  //   // Small delay to simulate a real click
-  //   delay(100); //may remove
-  //   blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
-  // }
+  Gestures gesture_ = gesture(thumb, pointer_1, middle_1, ring, pinky);
 
-  // //left mouse button
-  // if (leftclick){
-  //   if (sense0 < 50){
-  //     leftclick = 0;
-  //     blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+  // this section of code handles click logic
+  // we use rightclick and leftclick to manage states
+  // if (rightclick)
+  // {
+  //   if (gesture_ == M) // to use gesture input use the gesture enum: m for middle
+  //   {
+  //     // Serial.println("click!: " + String(sensor0));
+  //     rightclick = 0;
+  //     blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
   //   }
   // }
-  // else{
-  //   if(sense0 > 50){
-  //     //Serial.println("click!: " + String(sensor0));
-  //     leftclick = 1;
-  //     blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-  //   }
-  // }
-
-  // if (laser == 0){
-  //   if (sensor2 > 75){
-  //     laser = 1;
-  //     digitalWrite(A5, HIGH);  // Turn the pin on (set it HIGH)
-  //   }
-  // }
-  // else {
-  //   if (sensor2 < 75){
-  //     laser = 0;
-  //     digitalWrite(A5, LOW);   // Turn the pin off (set it LOW)
+  // else
+  // {
+  //   if (gesture_ == M)  // to use gesture input use the gesture enum: m for middle
+  //   {
+  //     // Serial.println("click!: " + String(sensor0));
+  //     rightclick = 1;
+  //     blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
+  //     // Small delay to simulate a real click
   //   }
   // }
 
-  // // Serial.print(_ekf.x[1]); Serial.print(",");
-  // // Serial.print(_ekf.x[3]); Serial.print(",");
-  // // Serial.print(gy); Serial.print(",");
-  // // Serial.print(gz); Serial.print(",");
-  // // // Serial.print(ax); Serial.print(",");
-  // // // Serial.print(_ekf.x[3]); Serial.print(",");
-  // // Serial.print(ay); Serial.print(",");
-  // // Serial.print(az); Serial.print(",");
+  // left mouse button
+  switch (leftState)
+  {
+  case MOUSE_IDLE:
+    // At idle, check if we have a new left-click or drag gesture.
+    if (gesture_ == R) // should be I
+    {
+      // Initiate a discrete left-click event.
+      // (According to our grammar, a click is I followed by NONE.)
+      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
+      leftState = CLICK_EVENT;
+      mouseEnabled = false;
+    }
+    else if (gesture_ == RP) // should be TI
+    {
+      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
+      // A TI signal represents the start of a drag even
+      leftState = DRAG_EVENT;
+    }
+    break;
 
-  // Serial.print(sense0);
+  case CLICK_EVENT:
+    // In a click event, we expect the release soon (gesture sequence: I then NONE).
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+      leftState = MOUSE_IDLE;
+    }
+    break;
+
+  case DRAG_EVENT:
+    // In a drag event, keep the button held until you get the NONE signal.
+    if (gesture_ == NONE)
+    {
+      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+      leftState = MOUSE_IDLE;
+    }
+    break;
+  }
+
+  switch (rightState)
+  {
+  case MOUSE_IDLE:
+    if (gesture_ == M)
+    {
+      blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
+      rightState = CLICK_EVENT;
+      mouseEnabled = false;
+    }
+    break;
+
+  case CLICK_EVENT:
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
+      rightState = MOUSE_IDLE;
+    }
+    break;
+  }
+
+  switch (zoomState)
+  {
+  case ZOOM_IDLE:
+    if (gesture_ == TP)
+    {
+      mouseEnabled = false;
+
+      // zoom in
+      if (ay >= 1)
+      {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
+        blehid.mouseScroll(-1);
+        zoomState = ZOOM_IN;
+      }
+
+      // zoom out
+      else
+      {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
+        blehid.mouseScroll(1);
+        zoomState = ZOOM_OUT;
+      }
+    }
+    break;
+
+  case ZOOM_IN:
+    if (gesture_ == NONE)
+    {
+      blehid.mouseScroll(0);
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
+      blehid.keyRelease();
+      mouseEnabled = true;
+      zoomState = ZOOM_IDLE;
+    }
+    break;
+
+  case ZOOM_OUT:
+    if (gesture_ == NONE)
+    {
+      blehid.mouseScroll(0);
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
+      blehid.keyRelease();
+      mouseEnabled = true;
+      zoomState = ZOOM_IDLE;
+    }
+    break;
+  }
+
+  switch (scrollState)
+  {
+  case SCROLL_IDLE:
+    if (gesture_ == T) // should be TRP
+    {
+      mouseEnabled = false;
+
+      // scroll up
+      if (ay >= 1)
+      {
+        blehid.mouseScroll(1);
+        scrollState = SCROLL_UP;
+      }
+
+      // scroll down
+      else
+      {
+        blehid.mouseScroll(-1);
+        scrollState = SCROLL_DOWN;
+      }
+    }
+    break;
+
+  case SCROLL_UP:
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      blehid.mouseScroll(0);
+      scrollState = SCROLL_IDLE;
+    }
+    break;
+
+  case SCROLL_DOWN:
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      blehid.mouseScroll(0);
+      scrollState = SCROLL_IDLE;
+    }
+    break;
+  }
+
+  switch (laserState)
+  {
+  case LASER_IDLE:
+    if (gesture_ == P) // should be T
+    {
+      mouseEnabled = false;
+      digitalWrite(A5, HIGH);
+      laserState = LASER;
+    }
+    break;
+
+  case LASER:
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      digitalWrite(A5, LOW);
+      laserState = LASER_IDLE;
+    }
+    break;
+  }
+
+  // Serial.print(_ekf.x[1]); Serial.print(",");
+  // Serial.print(_ekf.x[3]); Serial.print(",");
+  // Serial.print(gy); Serial.print(",");
+  // Serial.print(gz); Serial.print(",");
+
+  //  Serial.print(ax); Serial.print(",");
+  // Serial.print(ay); Serial.print(",");
+  // Serial.print(az); Serial.print(",");
+  // Serial.print(pointer_1);
   // Serial.print(",");
-  // Serial.print(sense1);
+  // Serial.print(middle_1);
   // Serial.print(",");
-  // Serial.print(sense2);
-  // Serial.print(",");
-  // Serial.print(sense3);
+  // Serial.print(rightclick);
   // Serial.print(",");
 
-  // Serial.print("right state: ");
-  //  Serial.print(rightclick);
-  //  Serial.print(",");
-  //  //Serial.print("left state: ");
-  //  Serial.print(leftclick);
-  //  Serial.print(",");
-
-  // Serial.print(sensor0); //thumb
+  // Serial.print(leftclick);
   // Serial.print(",");
 
-  // Serial.print(sensor1); //pointer
-  // Serial.print(",");
-  // Serial.print(sensor2); //pinky
+  Serial.print(thumb_1); // middle
+  Serial.print(",");
 
-  // Serial.print(",");
-  // Serial.print(sensor3); //thumb
-  // Serial.print(",");
+  Serial.print(pointer_1); // pointer
+  Serial.print(",");
+  Serial.print(middle_1); // thumb
 
-  // Serial.print(sensor4); //ring
-  // Serial.print(",");
+  Serial.print(",");
+  Serial.print(ring_1); // ring
+  Serial.print(",");
 
-  // // Serial.print(vy); Serial.print(",");
-  // // Serial.print(vx); Serial.print(",");
-  // // Serial.print(ax); Serial.print(",");
-  // // Serial.print(ay); Serial.print(",");
-  // // Serial.print(az); Serial.println();
-  // // Serial.print(vy); Serial.print(",");
-  // // Serial.print(vx); Serial.print(",");
-  // Serial.print(curr / 1000.000);
-  // Serial.println();
+  Serial.print(pinky_1); // pinky
+  Serial.print(",");
+
+  Serial.print(curr / 1000.000);
+  Serial.println();
 }
 
 void startAdv(void)
@@ -366,5 +577,5 @@ void configBluetooth()
 {
   // add any bluetooth config stuff here
   Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
-  Bluefruit.configPrphConn(50, 8, 4, 4);
+  Bluefruit.configPrphConn(100, 8, 4, 4);
 }
