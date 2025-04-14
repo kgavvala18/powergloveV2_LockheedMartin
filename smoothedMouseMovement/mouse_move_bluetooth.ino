@@ -142,26 +142,26 @@ uint8_t emptyKeycode[6] = {0};
 uint8_t activeKey[6] = {0};
 
 bool mouseEnabled = true;
+bool toggleMouse = false;
+
+constexpr Gesture LEFT_CLICK_GESTURE = I;
+constexpr Gesture RIGHT_CLICK_GESTURE = M;
+constexpr Gesture DRAG_GESTURE = TI;
+constexpr Gesture LASER_GESTURE = T;
+constexpr Gesture DISABLE_MOUSE_GESTURE = TIMRP;
+constexpr Gesture SNIP_GESTURE = TMRP;
+constexpr Gesture ALT_F4_GESTURE = TIRP;
+constexpr Gesture ALT_TAB_GESTURE = MRP;
+constexpr Gesture ALT_SHIFT_TAB_GESTURE = IRP;
+constexpr Gesture ZOOM_GESTURE = TP;
+constexpr Gesture SCROLL_GESTURE = TRP;
 
 enum MouseState
 {
-  MOUSE_IDLE,  // waiting for a gesture event
-  CLICK_EVENT, // detected a quick left click (I pressed; waiting for NONE to release)
-  DRAG_EVENT   // detected a drag (TI pressed; waiting for NONE to finish drag)
-};
-
-enum ZoomState
-{
-  ZOOM_IDLE,
-  ZOOM_IN,
-  ZOOM_OUT
-};
-
-enum ScrollState
-{
-  SCROLL_IDLE,
-  SCROLL_UP,
-  SCROLL_DOWN
+  MOUSE_IDLE,
+  LEFT_CLICK_EVENT,
+  RIGHT_CLICK_EVENT,
+  DRAG_EVENT
 };
 
 enum LaserState
@@ -170,11 +170,21 @@ enum LaserState
   LASER
 };
 
-MouseState leftState = MOUSE_IDLE;
-MouseState rightState = MOUSE_IDLE;
-ZoomState zoomState = ZOOM_IDLE;
-ScrollState scrollState = SCROLL_IDLE;
+enum KeyboardState
+{
+  KEYBOARD_IDLE,
+  SNIP,
+  ALT_F4,
+  ALT_TAB,
+  ALT_SHIFT_TAB,
+  DISABLE_MOUSE,
+  ZOOM,
+  SCROLL
+};
+
+MouseState mouseState = MOUSE_IDLE;
 LaserState laserState = LASER_IDLE;
+KeyboardState keyboardState = KEYBOARD_IDLE;
 
 // the setup routine runs once when you press reset:
 void setup()
@@ -335,64 +345,43 @@ void loop()
   // }
 
   // left mouse button
-  switch (leftState)
+  switch (mouseState)
   {
   case MOUSE_IDLE:
-    // At idle, check if we have a new left-click or drag gesture.
-
-    if (gesture_ == TI)
+    if (gesture_ == DRAG_GESTURE)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-      // A TI signal represents the start of a drag even
       leftState = DRAG_EVENT;
     }
-    else if (gesture_ == I)
+    else if (gesture_ == LEFT_CLICK_GESTURE)
     {
-      // Initiate a discrete left-click event.
-      // (According to our grammar, a click is I followed by NONE.)
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-      leftState = CLICK_EVENT;
+      mouseState = LEFT_CLICK_EVENT;
       mouseEnabled = false;
     }
+    else if (gesture_ == RIGHT_CLICK_GESTURE)
+      {
+        blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
+        mouseState = RIGHT_CLICK_EVENT;
+        mouseEnabled = false;
+      }
     break;
 
-  case CLICK_EVENT:
-    // In a click event, we expect the release soon (gesture sequence: I then NONE).
+  case LEFT_CLICK_EVENT:
     if (gesture_ == NONE)
     {
       mouseEnabled = true;
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       leftState = MOUSE_IDLE;
     }
-    else if (gesture_ == TI)
+    else if (gesture_ == DRAG_GESTURE)
     {
       mouseEnabled = true;
       leftState = DRAG_EVENT;
     }
     break;
 
-  case DRAG_EVENT:
-    // In a drag event, keep the button held until you get the NONE signal.
-    if (gesture_ == NONE)
-    {
-      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
-      leftState = MOUSE_IDLE;
-    }
-    break;
-  }
-
-  switch (rightState)
-  {
-  case MOUSE_IDLE:
-    if (gesture_ == M)
-    {
-      blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
-      rightState = CLICK_EVENT;
-      mouseEnabled = false;
-    }
-    break;
-
-  case CLICK_EVENT:
+  case RIGHT_CLICK_EVENT:
     if (gesture_ == NONE)
     {
       mouseEnabled = true;
@@ -400,102 +389,20 @@ void loop()
       rightState = MOUSE_IDLE;
     }
     break;
-  }
 
-  switch (zoomState)
-  {
-  case ZOOM_IDLE:
-    if (gesture_ == TP)
-    {
-      mouseEnabled = false;
-
-      // zoom in
-      if (ay >= 1)
-      {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
-        blehid.mouseScroll(-1);
-        zoomState = ZOOM_IN;
-      }
-
-      // zoom out
-      else
-      {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
-        blehid.mouseScroll(1);
-        zoomState = ZOOM_OUT;
-      }
-    }
-    break;
-
-  case ZOOM_IN:
+  case DRAG_EVENT:
     if (gesture_ == NONE)
     {
-      blehid.mouseScroll(0);
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
-      blehid.keyRelease();
-      mouseEnabled = true;
-      zoomState = ZOOM_IDLE;
-    }
-    break;
-
-  case ZOOM_OUT:
-    if (gesture_ == NONE)
-    {
-      blehid.mouseScroll(0);
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
-      blehid.keyRelease();
-      mouseEnabled = true;
-      zoomState = ZOOM_IDLE;
+      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+      leftState = MOUSE_IDLE;
     }
     break;
   }
-
-  switch (scrollState)
-  {
-  case SCROLL_IDLE:
-    if (gesture_ == TRP)
-    {
-      mouseEnabled = false;
-
-      // scroll up
-      if (ay >= 1)
-      {
-        blehid.mouseScroll(1);
-        scrollState = SCROLL_UP;
-      }
-
-      // scroll down
-      else
-      {
-        blehid.mouseScroll(-1);
-        scrollState = SCROLL_DOWN;
-      }
-    }
-    break;
-
-  case SCROLL_UP:
-    if (gesture_ == NONE)
-    {
-      mouseEnabled = true;
-      blehid.mouseScroll(0);
-      scrollState = SCROLL_IDLE;
-    }
-    break;
-
-  case SCROLL_DOWN:
-    if (gesture_ == NONE)
-    {
-      mouseEnabled = true;
-      blehid.mouseScroll(0);
-      scrollState = SCROLL_IDLE;
-    }
-    break;
-  }
-
+ 
   switch (laserState)
   {
   case LASER_IDLE:
-    if (gesture_ == T)
+    if (gesture_ == LASER_GESTURE)
     {
       mouseEnabled = false;
       digitalWrite(A5, HIGH);
@@ -510,12 +417,149 @@ void loop()
       digitalWrite(A5, LOW);
       laserState = LASER_IDLE;
     }
-    else if (gesture_ == TI)
+    else if (gesture_ == DRAG_GESTURE)
     {
       mouseEnabled = true;
       digitalWrite(A5, LOW);
       leftState = CLICK_EVENT;
       laserState = LASER_IDLE;
+    }
+    break;
+  }
+ 
+ switch(keyboardState)
+  {
+   case KEYBOARD_IDLE:
+     if (gesture_ == DISABLE_MOUSE_GESTURE)
+     {
+        toggleMouse = !toggleMouse;
+        mouseEnabled = false;
+        keyboardState = DISABLE_MOUSE;
+     }
+     else if (gesture_ == SNIP_GESTURE)
+     {
+        activeKey[0] = 0x16;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x28, activeKey);
+        keyboardState = SNIP;
+     }
+     else if (gesture_ == ALT_F4_GESTURE)
+     {
+        mouseEnabled = false;
+        activeKey[0] = 0x3D;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
+        keyboardState = ALT_F4;
+     }
+     else if (gesture_ == ALT_TAB_GESTURE)
+     {
+        mouseEnabled = false;
+        activeKey[0] = 0x2B;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
+        keyboardState = ALT_TAB;
+     }
+     else if (gesture_ == ALT_SHIFT_TAB_GESTURE)
+     {
+        mouseEnabled = false;
+        activeKey[0] = 0x2B;
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x24, activeKey);
+        keyboardState = ALT_SHIFT_TAB;
+     }
+     else if (gesture_ == SCROLL_GESTURE)
+     {
+        mouseEnabled = false;
+
+        // scroll up
+        if (ay >= 1)
+        {
+          blehid.mouseScroll(1);
+          keyboardState = SCROLL;
+        }
+
+        // scroll down
+        else
+        {
+          blehid.mouseScroll(-1);
+          keyboardState = SCROLL;
+        }
+     }
+     else if (gesture_ == ZOOM_GESTURE)
+     {
+        mouseEnabled = false;
+
+        // zoom in
+        if (ay >= 1)
+        {
+          blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
+          blehid.mouseScroll(-1);
+          keyboardState = ZOOM;
+        }
+
+        // zoom out
+        else
+        {
+          blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x01, emptyKeycode); // Hold Ctrl (0x01 = Left Ctrl) is modifier for control
+          blehid.mouseScroll(1);
+          keyboardState = ZOOM;
+        }
+     }
+     break;
+   
+   case DISABLE_MOUSE:
+     if (!toggleMouse)
+     {
+        mouseEnabled = true;
+     }
+     keyboardState = KEYBOARD_IDLE;
+     break;
+
+   case SNIP:
+     if (gesture_ == NONE)
+     {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
+        blehid.keyRelease();
+     }
+     break;
+
+   case ALT_F4:
+     if (gesture_ == NONE)
+     {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
+        blehid.keyRelease();
+     }
+     break;
+
+   case ALT_TAB:
+     if (gesture_ == NONE)
+     {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
+        blehid.keyRelease();
+     }
+     break;
+
+   case ALT_SHIFT_TAB:
+     if (gesture_ == NONE)
+     {
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
+        blehid.keyRelease();
+     }
+     break;
+
+   case SCROLL:
+    if (gesture_ == NONE)
+    {
+      mouseEnabled = true;
+      blehid.mouseScroll(0);
+      keyboardState = KEYBOARD_IDLE;
+    }
+    break;
+
+   case ZOOM:
+    if (gesture_ == NONE)
+    {
+      blehid.mouseScroll(0);
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
+      blehid.keyRelease();
+      mouseEnabled = true;
+      keyboardState = KEYBOARD_IDLE;
     }
     break;
   }
