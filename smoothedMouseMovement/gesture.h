@@ -75,11 +75,11 @@ Gestures gesture(float thumb, float index, float middle, float ring, float pinky
     ringBool = ring > RING_THRES;
     pinkyBool = pinky > PINKY_THRES;
 
-    int mask = (thumbBool << 0) |
-               (indexBool << 1) |
+    int mask = (thumbBool << 4) |
+               (indexBool << 3) |
                (middleBool << 2) |
-               (ringBool << 3) |
-               (pinkyBool << 4);
+               (ringBool << 1) |
+               (pinkyBool << 0);
 
     switch (mask)
     {
