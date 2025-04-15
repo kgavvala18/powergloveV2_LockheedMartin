@@ -173,6 +173,8 @@ enum GestureState
 };
 
 GestureState gestureState = IDLE;
+Gestures previousGesture = NONE;
+Gestures currentGesture = NONE;
 
 // the setup routine runs once when you press reset:
 void setup()
@@ -305,93 +307,79 @@ void loop()
 
   ////
   ////GESTURE TESTING
-
-  Serial.println(gesture(thumb_1, pointer_1, middle_1, ring_1, pinky_1));
-
-  Gestures gesture_ = gesture(thumb, pointer_1, middle_1, ring, pinky);
-
-  // this section of code handles click logic
-  // we use rightclick and leftclick to manage states
-  // if (rightclick)
-  // {
-  //   if (gesture_ == M) // to use gesture input use the gesture enum: m for middle
-  //   {
-  //     // Serial.println("click!: " + String(sensor0));
-  //     rightclick = 0;
-  //     blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
-  //   }
-  // }
-  // else
-  // {
-  //   if (gesture_ == M)  // to use gesture input use the gesture enum: m for middle
-  //   {
-  //     // Serial.println("click!: " + String(sensor0));
-  //     rightclick = 1;
-  //     blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
-  //     // Small delay to simulate a real click
-  //   }
-  // }
+  previousGesture = currentGesture;
+  currentGesture = gesture(thumb, pointer_1, middle_1, ring, pinky);
+  Serial.println(currentGesture);
 
   switch (gestureState)
   {
   case IDLE:
-    if (gesture_ == DRAG_GESTURE)
+    if (currentGesture == DRAG_GESTURE)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
       gestureState = DRAG_EVENT;
     }
-    else if (gesture_ == LEFT_CLICK_GESTURE)
+     
+    else if (currentGesture == LEFT_CLICK_GESTURE)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
       gestureState = LEFT_CLICK_EVENT;
       mouseEnabled = false;
     }
-    else if (gesture_ == RIGHT_CLICK_GESTURE)
+     
+    else if (currentGesture == RIGHT_CLICK_GESTURE)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
       gestureState = RIGHT_CLICK_EVENT;
       mouseEnabled = false;
     }
-    else if (gesture_ == LASER_GESTURE)
+     
+    else if (currentGesture == LASER_GESTURE)
     {
       mouseEnabled = false;
       digitalWrite(A5, HIGH);
       gestureState = LASER;
     }
-    else if (gesture_ == DISABLE_MOUSE_GESTURE)
+     
+    else if (currentGesture == DISABLE_MOUSE_GESTURE)
     {
        toggleMouse = !toggleMouse;
        mouseEnabled = false;
        gestureState = DISABLE_MOUSE;
     }
-     else if (gesture_ == SNIP_GESTURE)
+     
+     else if (currentGesture == SNIP_GESTURE)
      {
         activeKey[0] = 0x16;
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x28, activeKey);
         gestureState = SNIP;
      }
-     else if (gesture_ == ALT_F4_GESTURE)
+      
+     else if (currentGesture == ALT_F4_GESTURE)
      {
         mouseEnabled = false;
         activeKey[0] = 0x3D;
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
         gestureState = ALT_F4;
      }
-     else if (gesture_ == ALT_TAB_GESTURE)
+      
+     else if (currentGesture == ALT_TAB_GESTURE)
      {
         mouseEnabled = false;
         activeKey[0] = 0x2B;
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x04, activeKey);
         gestureState = ALT_TAB;
      }
-     else if (gesture_ == ALT_SHIFT_TAB_GESTURE)
+      
+     else if (currentGesture == ALT_SHIFT_TAB_GESTURE)
      {
         mouseEnabled = false;
         activeKey[0] = 0x2B;
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x24, activeKey);
         gestureState = ALT_SHIFT_TAB;
      }
-     else if (gesture_ == SCROLL_GESTURE)
+      
+     else if (currentGesture == SCROLL_GESTURE)
      {
         mouseEnabled = false;
 
@@ -409,7 +397,8 @@ void loop()
           gestureState = SCROLL;
         }
      }
-     else if (gesture_ == ZOOM_GESTURE)
+      
+     else if (currentGesture == ZOOM_GESTURE)
      {
         mouseEnabled = false;
 
@@ -432,30 +421,35 @@ void loop()
     break;
 
   case LEFT_CLICK_EVENT:
-    if (gesture_ == NONE)
+    if (currentGesture == NONE)
     {
       mouseEnabled = true;
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       gestureState = IDLE;
     }
-    else if (gesture_ == DRAG_GESTURE)
+    else if (previousGesture != currentGesture)
     {
       mouseEnabled = true;
-      gestureState = DRAG_EVENT;
+      gestureState = IDLE;
     }
     break;
 
   case RIGHT_CLICK_EVENT:
-    if (gesture_ == NONE)
+    if (currentGesture == NONE)
     {
       mouseEnabled = true;
       blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
       gestureState = IDLE;
     }
+    else if (previousGesture != currentGesture)
+    {
+      mouseEnabled = true;
+      gestureState = IDLE;
+    }
     break;
 
   case DRAG_EVENT:
-    if (gesture_ == NONE)
+    if (currentGesture == NONE || previousGesture != currentGesture)
     {
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       gestureState = IDLE;
@@ -463,17 +457,11 @@ void loop()
     break;
    
   case LASER:
-   if (gesture_ == NONE)
+   if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
       digitalWrite(A5, LOW);
       gestureState = IDLE;
-    }
-    else if (gesture_ == DRAG_GESTURE)
-    {
-      mouseEnabled = true;
-      digitalWrite(A5, LOW);
-      gestureState = LEFT_CLICK_EVENT;
     }
     break;
    
@@ -486,7 +474,7 @@ void loop()
      break;
 
    case SNIP:
-     if (gesture_ == NONE)
+     if (currentGesture == NONE || previousGesture != currentGesture)
      {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
@@ -495,7 +483,7 @@ void loop()
      break;
 
    case ALT_F4:
-     if (gesture_ == NONE)
+     if (currentGesture == NONE || previousGesture != currentGesture)
      {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
@@ -504,7 +492,7 @@ void loop()
      break;
 
    case ALT_TAB:
-     if (gesture_ == NONE)
+     if (currentGesture == NONE || previousGesture != currentGesture)
      {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
@@ -513,7 +501,7 @@ void loop()
      break;
 
    case ALT_SHIFT_TAB:
-     if (gesture_ == NONE)
+     if (currentGesture == NONE || previousGesture != currentGesture)
      {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode);
         blehid.keyRelease();
@@ -522,17 +510,16 @@ void loop()
      break;
 
    case SCROLL:
-    if (gesture_ == NONE)
+    if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
       blehid.mouseScroll(0);
-      keyboardState = KEYBOARD_IDLE;
       gestureState = IDLE;
     }
     break;
 
    case ZOOM:
-    if (gesture_ == NONE)
+    if (currentGesture == NONE || previousGesture != currentGesture)
     {
       blehid.mouseScroll(0);
       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0, emptyKeycode); // Release Ctrl modifier
