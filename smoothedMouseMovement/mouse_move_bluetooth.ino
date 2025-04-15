@@ -144,17 +144,17 @@ uint8_t activeKey[6] = {0};
 bool mouseEnabled = true;
 bool toggleMouse = false;
 
-constexpr Gesture LEFT_CLICK_GESTURE = I;
-constexpr Gesture RIGHT_CLICK_GESTURE = M;
-constexpr Gesture DRAG_GESTURE = TI;
-constexpr Gesture LASER_GESTURE = T;
-constexpr Gesture DISABLE_MOUSE_GESTURE = TIMRP;
-constexpr Gesture SNIP_GESTURE = TMRP;
-constexpr Gesture ALT_F4_GESTURE = TIRP;
-constexpr Gesture ALT_TAB_GESTURE = MRP;
-constexpr Gesture ALT_SHIFT_TAB_GESTURE = IRP;
-constexpr Gesture ZOOM_GESTURE = TP;
-constexpr Gesture SCROLL_GESTURE = TRP;
+constexpr Gestures LEFT_CLICK_GESTURE = I;
+constexpr Gestures RIGHT_CLICK_GESTURE = M;
+constexpr Gestures DRAG_GESTURE = TI;
+constexpr Gestures LASER_GESTURE = T;
+constexpr Gestures DISABLE_MOUSE_GESTURE = TIMRP;
+constexpr Gestures SNIP_GESTURE = TMRP;
+constexpr Gestures ALT_F4_GESTURE = TIRP;
+constexpr Gestures ALT_TAB_GESTURE = MRP;
+constexpr Gestures ALT_SHIFT_TAB_GESTURE = IRP;
+constexpr Gestures ZOOM_GESTURE = TP;
+constexpr Gestures SCROLL_GESTURE = TRP;
 
 enum GestureState
 {
