@@ -305,11 +305,11 @@ void setup()
 {
 
   Serial.begin(115200);
-  while (!Serial)
-  {
-    Serial.println("cannot proceed!");
-    delay(10);
-  }
+  // while (!Serial)
+  // {
+  //   Serial.println("cannot proceed!");
+  //   delay(10);
+  // }
 
   Serial.println("Motion Control Glove - Starting");
 
