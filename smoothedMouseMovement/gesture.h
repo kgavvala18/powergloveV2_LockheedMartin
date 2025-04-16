@@ -6,8 +6,8 @@
 #define THUMB_THRES 60
 #define INDEX_THRES 40
 #define MIDDLE_THRES 50
-#define RING_THRES 50  // to be determined
-#define PINKY_THRES 50 // to be determined
+#define RING_THRES 35  // to be determined
+#define PINKY_THRES 42 // to be determined
 
 typedef enum Gestures
 {
