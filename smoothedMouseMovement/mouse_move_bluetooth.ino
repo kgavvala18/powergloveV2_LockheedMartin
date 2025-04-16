@@ -123,6 +123,12 @@ float thumbFiltered = 0.0;
 float pinkyFiltered = 0.0;
 float ringFiltered = 0.0;
 
+float oldIndexFiltered = 0.0;
+float oldMiddleFiltered = 0.0;
+float oldThumbFiltered = 0.0;
+float oldPinkyFiltered = 0.0;
+float oldRingFiltered = 0.0;
+
 float my = 0.0;
 float mz = 0.0;
 
@@ -286,11 +292,22 @@ void loop()
   my = MOUSE_SENSITIVITY * _ekf.x[1];
   mz = -MOUSE_SENSITIVITY * _ekf.x[3];
 
+  //set old values to check rate of change 
+  oldIndexFiltered = indexFiltered;
+  oldMiddleFiltered = middleFiltered;
+  oldThumbFiltered = thumbFiltered;
+  oldPinkyFiltered = pinkyFiltered;
+  oldRingFiltered = ringFiltered;
+
+
+
   indexFiltered = _ekf.x[4];
   middleFiltered = _ekf.x[5];
   thumbFiltered = _ekf.x[6];
   ringFiltered = _ekf.x[7];
   pinkyFiltered = pinkyFinger;
+
+  
 
   if (mouseEnabled)
   {
@@ -302,6 +319,36 @@ void loop()
   previousGesture = currentGesture;
   currentGesture = gesture(thumbFiltered, indexFiltered, middleFiltered, ringFiltered, pinkyFiltered);
   Serial.println(currentGesture);
+
+
+  //Testing gesture change might need variable per finger
+  /*if(fabs(indexFiltered - oldIndexFiltered) > 1 ||
+  fabs(middleFiltered - oldMiddleFiltered) > 1 ||
+  fabs(thumbFiltered - oldThumbFiltered) > 1 ||
+  fabs(ringFiltered - oldRingFiltered) > 1 ||
+  fabs(pinkyFiltered - oldPinkyFiltered) > 1  )
+  Serial.print("Δindex: ");
+  Serial.print(fabs(indexFiltered - oldIndexFiltered), 3);
+  Serial.print(" | Δmiddle: ");
+  Serial.print(fabs(middleFiltered - oldMiddleFiltered), 3);
+  Serial.print(" | Δthumb: ");
+  Serial.print(fabs(thumbFiltered - oldThumbFiltered), 3);
+  Serial.print(" | Δring: ");
+  Serial.print(fabs(ringFiltered - oldRingFiltered), 3);
+  Serial.print(" | Δpinky: ");
+  Serial.println(fabs(pinkyFiltered - oldPinkyFiltered), 3);
+
+  {
+    
+    previousGesture = currentGesture;
+    currentGesture = gesture(thumbFiltered, indexFiltered, middleFiltered, ringFiltered, pinkyFiltered);
+    Serial.println(currentGesture);
+  }
+
+  else 
+  {
+  
+  }*/
 
   switch (gestureState)
   {
