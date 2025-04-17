@@ -622,14 +622,14 @@ void loop()
     }
     break;
 
-  case ALT_F4:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
-    }
-    break;
+  // case ALT_F4:
+    // if (currentGesture == NONE || previousGesture != currentGesture)
+    // {
+      // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      // blehid.keyRelease();
+      // gestureState = IDLE;
+    // }
+    // break;
 
   case ALT_TAB:
     if (currentGesture == NONE || previousGesture != currentGesture)
