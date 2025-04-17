@@ -436,206 +436,225 @@ void loop()
   Serial.println(currentGesture);
 
   switch (gestureState)
-  {
-  case IDLE:
-    if (currentGesture == DRAG_GESTURE)
-    {
-      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-      gestureState = DRAG_EVENT;
-    }
-
-    else if (currentGesture == LEFT_CLICK_GESTURE)
-    {
-      blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
-      gestureState = LEFT_CLICK_EVENT;
-      mouseEnabled = false;
-    }
-
-    else if (currentGesture == RIGHT_CLICK_GESTURE)
-    {
-      blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
-      gestureState = RIGHT_CLICK_EVENT;
-      mouseEnabled = false;
-    }
-
-    else if (currentGesture == LASER_GESTURE)
-    {
-      mouseEnabled = false;
-      digitalWrite(22, HIGH);
-      gestureState = LASER;
-    }
-
-    else if (currentGesture == DISABLE_MOUSE_GESTURE)
-    {
-      toggleMouse = !toggleMouse;
-      mouseEnabled = false;
-      gestureState = DISABLE_MOUSE;
-    }
-
-    else if (currentGesture == SNIP_GESTURE)
-    {
-      activeKey[0] = HID_KEY_S; // 0x16
-      // 0xA should work (left shift + left windows)
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTSHIFT + KEYBOARD_MODIFIER_LEFTGUI, activeKey); // previously 0x28
-      gestureState = SNIP;
-    }
-
-    else if (currentGesture == ALT_F4_GESTURE)
-    {
-      mouseEnabled = false;
-      activeKey[0] = HID_KEY_F4;                                                            // 0x3D
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
-      gestureState = ALT_F4;
-    }
-
-    else if (currentGesture == ALT_TAB_GESTURE)
-    {
-      mouseEnabled = false;
-      activeKey[0] = HID_KEY_TAB;                                                           // 0x2B
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
-      gestureState = ALT_TAB;
-    }
-
-    else if (currentGesture == ALT_SHIFT_TAB_GESTURE)
-    {
-      mouseEnabled = false;
-      activeKey[0] = HID_KEY_TAB; // 0x2B
-      // 0x6 should work (left alt + left shift)
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT + KEYBOARD_MODIFIER_LEFTSHIFT, activeKey); // previously 0x24
-      gestureState = ALT_SHIFT_TAB;
-    }
-
-    else if (currentGesture == SCROLL_GESTURE)
-    {
-      mouseEnabled = false;
-
-      // scroll up
-      if (ay >= 1)
-      {
-        blehid.mouseScroll(1);
-        gestureState = SCROLL;
-      }
-
-      // scroll down
-      else
-      {
-        blehid.mouseScroll(-1);
-        gestureState = SCROLL;
-      }
-    }
-
-    else if (currentGesture == ZOOM_GESTURE)
-    {
-      mouseEnabled = false;
-
-      // zoom in
-      if (ay >= 1)
-      {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
-        blehid.mouseScroll(-1);
-        gestureState = ZOOM;
-      }
-
-      // zoom out
-      else
-      {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
-        blehid.mouseScroll(1);
-        gestureState = ZOOM;
-      }
-    }
-    break;
-
-  case LEFT_CLICK_EVENT:
-    if (currentGesture == NONE)
-    {
-      mouseEnabled = true;
-      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
-      gestureState = IDLE;
-    }
-    else if (previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case RIGHT_CLICK_EVENT:
-    if (currentGesture == NONE)
-    {
-      mouseEnabled = true;
-      blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
-      gestureState = IDLE;
-    }
-    else if (previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case DRAG_EVENT:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case LASER:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case DISABLE_MOUSE:
-    if (!toggleMouse)
-    {
-      mouseEnabled = true;
-    }
-    gestureState = IDLE;
-    break;
-
-  case SNIP:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case ALT_F4:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case ALT_TAB:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case ALT_SHIFT_TAB:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case SCROLL:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-
-  case ZOOM:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      cancelActiveGesture();
-    }
-    break;
-  }
+   {
+   case IDLE:
+     if (currentGesture == DRAG_GESTURE)
+     {
+       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
+       gestureState = DRAG_EVENT;
+     }
+ 
+     else if (currentGesture == LEFT_CLICK_GESTURE)
+     {
+       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
+       gestureState = LEFT_CLICK_EVENT;
+       mouseEnabled = false;
+     }
+ 
+     else if (currentGesture == RIGHT_CLICK_GESTURE)
+     {
+       blehid.mouseButtonPress(MOUSE_BUTTON_RIGHT);
+       gestureState = RIGHT_CLICK_EVENT;
+       mouseEnabled = false;
+     }
+ 
+     else if (currentGesture == LASER_GESTURE)
+     {
+       mouseEnabled = false;
+       digitalWrite(22, HIGH);
+       gestureState = LASER;
+     }
+ 
+     else if (currentGesture == DISABLE_MOUSE_GESTURE)
+     {
+       toggleMouse = !toggleMouse;
+       mouseEnabled = false;
+       gestureState = DISABLE_MOUSE;
+     }
+ 
+     else if (currentGesture == SNIP_GESTURE)
+     {
+       activeKey[0] = HID_KEY_S; // 0x16
+       // 0xA should work (left shift + left windows)
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTSHIFT + KEYBOARD_MODIFIER_LEFTGUI, activeKey); // previously 0x28
+       gestureState = SNIP;
+     }
+ 
+     else if (currentGesture == ALT_F4_GESTURE)
+     {
+       mouseEnabled = false;
+       activeKey[0] = HID_KEY_F4;                                                            // 0x3D
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
+       gestureState = ALT_F4;
+     }
+ 
+     else if (currentGesture == ALT_TAB_GESTURE)
+     {
+       mouseEnabled = false;
+       activeKey[0] = HID_KEY_TAB;                                                           // 0x2B
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
+       gestureState = ALT_TAB;
+     }
+ 
+     else if (currentGesture == ALT_SHIFT_TAB_GESTURE)
+     {
+       mouseEnabled = false;
+       activeKey[0] = HID_KEY_TAB; // 0x2B
+       // 0x6 should work (left alt + left shift)
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT + KEYBOARD_MODIFIER_LEFTSHIFT, activeKey); // previously 0x24
+       gestureState = ALT_SHIFT_TAB;
+     }
+ 
+     else if (currentGesture == SCROLL_GESTURE)
+     {
+       mouseEnabled = false;
+ 
+       // scroll up
+       if (ay >= 1)
+       {
+         blehid.mouseScroll(1);
+         gestureState = SCROLL;
+       }
+ 
+       // scroll down
+       else
+       {
+         blehid.mouseScroll(-1);
+         gestureState = SCROLL;
+       }
+     }
+ 
+     else if (currentGesture == ZOOM_GESTURE)
+     {
+       mouseEnabled = false;
+ 
+       // zoom in
+       if (ay >= 1)
+       {
+         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
+         blehid.mouseScroll(-1);
+         gestureState = ZOOM;
+       }
+ 
+       // zoom out
+       else
+       {
+         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
+         blehid.mouseScroll(1);
+         gestureState = ZOOM;
+       }
+     }
+     break;
+ 
+   case LEFT_CLICK_EVENT:
+     if (currentGesture == NONE)
+     {
+       mouseEnabled = true;
+       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+       gestureState = IDLE;
+     }
+     else if (previousGesture != currentGesture)
+     {
+       mouseEnabled = true;
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case RIGHT_CLICK_EVENT:
+     if (currentGesture == NONE)
+     {
+       mouseEnabled = true;
+       blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
+       gestureState = IDLE;
+     }
+     else if (previousGesture != currentGesture)
+     {
+       mouseEnabled = true;
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case DRAG_EVENT:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case LASER:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       mouseEnabled = true;
+       digitalWrite(22, LOW);
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case DISABLE_MOUSE:
+     if (!toggleMouse)
+     {
+       mouseEnabled = true;
+     }
+     gestureState = IDLE;
+     break;
+ 
+   case SNIP:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+       blehid.keyRelease();
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case ALT_F4:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+       blehid.keyRelease();
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case ALT_TAB:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+       blehid.keyRelease();
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case ALT_SHIFT_TAB:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+       blehid.keyRelease();
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case SCROLL:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       mouseEnabled = true;
+       blehid.mouseScroll(0);
+       gestureState = IDLE;
+     }
+     break;
+ 
+   case ZOOM:
+     if (currentGesture == NONE || previousGesture != currentGesture)
+     {
+       blehid.mouseScroll(0);
+       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+       blehid.keyRelease();
+       mouseEnabled = true;
+       gestureState = IDLE;
+     }
+     break;
+   }
 
   // Handle buttons
   // Read buttons
