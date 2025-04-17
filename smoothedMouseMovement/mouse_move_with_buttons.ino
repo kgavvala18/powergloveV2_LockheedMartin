@@ -555,8 +555,7 @@ void loop()
     }
     else if (previousGesture != currentGesture)
     {
-      mouseEnabled = true;
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
@@ -569,25 +568,21 @@ void loop()
     }
     else if (previousGesture != currentGesture)
     {
-      mouseEnabled = true;
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case DRAG_EVENT:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case LASER:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      mouseEnabled = true;
-      digitalWrite(22, LOW);
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
@@ -602,56 +597,42 @@ void loop()
   case SNIP:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case ALT_F4:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case ALT_TAB:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case ALT_SHIFT_TAB:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case SCROLL:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      mouseEnabled = true;
-      blehid.mouseScroll(0);
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
 
   case ZOOM:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.mouseScroll(0);
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      mouseEnabled = true;
-      gestureState = IDLE;
+      cancelActiveGesture();
     }
     break;
   }
@@ -843,4 +824,15 @@ void configBluetooth()
   // add any bluetooth config stuff here
   Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
   Bluefruit.configPrphConn(100, 8, 4, 4);
+}
+
+void cancelActiveGesture() {
+  blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
+  blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
+  blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
+  blehid.keyRelease();
+  mouseEnabled = true;
+  gestureState = IDLE;
+  digitalWrite(22, LOW);
+  blehid.mouseScroll(0);
 }
