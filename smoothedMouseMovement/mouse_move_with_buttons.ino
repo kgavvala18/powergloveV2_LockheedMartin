@@ -844,14 +844,3 @@ void configBluetooth()
   Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
   Bluefruit.configPrphConn(100, 8, 4, 4);
 }
-
-void cancelActiveGesture() {
-  blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
-  blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
-  blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
-  blehid.keyRelease();
-  mouseEnabled = true;
-  gestureState = IDLE;
-  digitalWrite(22, LOW);
-  blehid.mouseScroll(0);
-}
