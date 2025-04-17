@@ -25,7 +25,7 @@ constexpr int EKF_M = 8; //  Measurements: Y ang vel, Z ang vel, pointer, middle
 BLEDis bledis;
 BLEHidAdafruit blehid;
 
-static const float EPS = 1.5e-6;
+static const float EPS = 1.5e-7;
 
 static const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001};
 
@@ -133,6 +133,8 @@ float mz = 0.0;
 float ax = 0.0;
 float ay = 0.0;
 float az = 0.0;
+float a_x = 0.0;
+float a_y = 0.0;
 
 float gx = 0.0;
 float gy = 0.0;
@@ -148,7 +150,7 @@ constexpr Gestures DRAG_GESTURE = TI;
 constexpr Gestures LASER_GESTURE = T;
 constexpr Gestures DISABLE_MOUSE_GESTURE = TIMRP;
 constexpr Gestures SNIP_GESTURE = TMRP;
-constexpr Gestures ALT_F4_GESTURE = TIRP;
+// constexpr Gestures ALT_F4_GESTURE = TIRP;
 constexpr Gestures ALT_TAB_GESTURE = MRP;
 constexpr Gestures ALT_SHIFT_TAB_GESTURE = IRP;
 constexpr Gestures ZOOM_GESTURE = TP;
@@ -166,7 +168,7 @@ enum GestureState
   DRAG_EVENT,
   LASER,
   SNIP,
-  ALT_F4,
+  // ALT_F4,
   ALT_TAB,
   ALT_SHIFT_TAB,
   DISABLE_MOUSE,
@@ -422,8 +424,8 @@ void loop()
   to see if there may be a more optimal value*/
   my = MOUSE_SENSITIVITY * _ekf.x[1];
   mz = -MOUSE_SENSITIVITY * _ekf.x[3];
-  ay = _ekf.x[0];
-  ax = _ekf.x[2];
+  a_y = _ekf.x[0];
+  a_x = _ekf.x[2];
 
   indexFiltered = _ekf.x[4];
   middleFiltered = _ekf.x[5];
@@ -435,6 +437,11 @@ void loop()
   {
     blehid.mouseMove(mz, my);
   }
+
+  Serial.println("a_x, a_y: ");
+  Serial.print(a_x);
+  Serial.print(", ");
+  Serial.print(a_y);
 
   ////
   ////GESTURE TESTING
@@ -487,13 +494,13 @@ void loop()
       gestureState = SNIP;
     }
 
-    else if (currentGesture == ALT_F4_GESTURE)
-    {
-      mouseEnabled = false;
-      activeKey[0] = HID_KEY_F4;                                                            // 0x3D
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
-      gestureState = ALT_F4;
-    }
+    // else if (currentGesture == ALT_F4_GESTURE)
+    // {
+      // mouseEnabled = false;
+      // activeKey[0] = HID_KEY_F4;                                                            // 0x3D
+      // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
+      // gestureState = ALT_F4;
+    // }
 
     else if (currentGesture == ALT_TAB_GESTURE)
     {
@@ -517,14 +524,14 @@ void loop()
       mouseEnabled = false;
 
       // scroll up
-      if (ax >= 3)
+      if (a_x >= 3)
       {
         blehid.mouseScroll(1);
         gestureState = SCROLL;
       }
 
       // scroll down
-      else if (ax <= -3)
+      else if (a_x <= -3)
       {
         blehid.mouseScroll(-1);
         gestureState = SCROLL;
@@ -536,7 +543,7 @@ void loop()
       mouseEnabled = false;
 
       // zoom in
-      if (ax >= 3)
+      if (a_x >= 3)
       {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
         blehid.mouseScroll(-1);
@@ -544,7 +551,7 @@ void loop()
       }
 
       // zoom out
-      else if (ax <= -3)
+      else if (a_x <= -3)
       {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
         blehid.mouseScroll(1);
@@ -643,6 +650,21 @@ void loop()
     break;
 
   case SCROLL:
+    // scroll up
+    if (a_x >= 3)
+    {
+      blehid.mouseScroll(1);
+    }
+
+    // scroll down
+    else if (a_x <= -3)
+    {
+      blehid.mouseScroll(-1);
+    }
+    else
+    {
+      blehid.mouseScroll(0);
+    }
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
@@ -652,6 +674,21 @@ void loop()
     break;
 
   case ZOOM:
+    // zoom in
+    if (a_x >= 3)
+    {
+      blehid.mouseScroll(-1);
+    }
+
+    // zoom out
+    else if (a_x <= -3)
+    {
+      blehid.mouseScroll(1);
+    }
+    else
+    {
+      blehid.mouseScroll(0);
+    }
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       blehid.mouseScroll(0);
