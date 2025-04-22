@@ -31,7 +31,7 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
-      - name: Static code analysis
+      - name: Static Code Analysis
         run: |
           # Run PIO’s static analyzer on the native build.
           # Skip third‑party packages and fail if any medium/high defects are found:
@@ -39,8 +39,8 @@ jobs:
             --skip-packages \
             --fail-on-defect=medium \
             --fail-on-defect=high
-      - name: Run native unit tests
+      - name: Run Unit Tests
         run: pio test -e native
 
-      - name: Compile Feather firmware (no upload)
-        run: pio test -e adafruit_feather_nrf52840 --without-uploading
+      - name: Compile Feather firmware
+        run: pio run -e adafruit_feather_nrf52840
