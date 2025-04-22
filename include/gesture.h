@@ -1,3 +1,4 @@
+#pragma once
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
@@ -65,7 +66,7 @@ typedef enum Gestures
 } Gestures;
 
 /// @private
-Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
+static inline Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
 {
     bool thumbBool, indexBool, middleBool, ringBool, pinkyBool;
 
