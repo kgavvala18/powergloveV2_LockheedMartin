@@ -1,0 +1,35 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Cache Python & PlatformIO caches
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-pio-local-tests
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Run native unit tests
+        run: pio test -e native
