@@ -12,6 +12,10 @@ constexpr int EKF_M = 8;
 BLEDis bledis;
 BLEHidAdafruit blehid;
 
+// predeclare functions
+void configBluetooth(void);
+void startAdv(void);
+
 // Extended Kalman Filter setup
 static const float EPS = 1.5e-6;
 
