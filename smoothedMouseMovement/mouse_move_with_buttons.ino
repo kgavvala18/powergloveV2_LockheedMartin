@@ -9,7 +9,7 @@ converting this to use on the feather nRF52840 sense board with BLe HID
 
 constexpr int EKF_N = 8; //  States: Y angular disp, Y ang vel, Z ang disp, Z ang vel, pointer, middle, thumb
 // Want 9: Y lin Acc, Y lin Vel, Z lin Acc, Z lin Vel, Y ang Vel, Z ang Vel, pointer, middle, thumb, ring, pinky
-constexpr int EKF_M = 8; //  Measurements: Y ang vel, Z ang vel, pointer, middle, thumb, ring, pinky
+constexpr int EKF_M = 6; //  Measurements: Y ang vel, Z ang vel, pointer, middle, thumb, ring, pinky
 // Want 7: Y lin Acc, Z lin Acc, Y ang Vel, Z ang Vel, pointer, middle, thumb, ring pinky
 
 #include <bluefruit.h>
@@ -25,7 +25,7 @@ constexpr int EKF_M = 8; //  Measurements: Y ang vel, Z ang vel, pointer, middle
 BLEDis bledis;
 BLEHidAdafruit blehid;
 
-static const float EPS = 1.5e-7;
+static const float EPS = 1.5e-6;
 
 static const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001};
 
@@ -38,13 +38,13 @@ static const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.0
 static const float Q[EKF_N * EKF_N] = {
 
     EPS, 0, 0, 0, 0, 0, 0, 0,
-    0, EPS, 0, 0, 0, 0, 0, 0,
+    0, EPS * 10, 0, 0, 0, 0, 0, 0,
     0, 0, EPS, 0, 0, 0, 0, 0,
-    0, 0, 0, EPS, 0, 0, 0, 0,
-    0, 0, 0, 0, EPS, 0, 0, 0,
-    0, 0, 0, 0, 0, EPS, 0, 0,
-    0, 0, 0, 0, 0, 0, EPS, 0,
-    0, 0, 0, 0, 0, 0, 0, EPS};
+    0, 0, 0, EPS * 10, 0, 0, 0, 0,
+    0, 0, 0, 0, EPS * 10, 0, 0, 0,
+    0, 0, 0, 0, 0, EPS * 10, 0, 0,
+    0, 0, 0, 0, 0, 0, EPS * 10, 0,
+    0, 0, 0, 0, 0, 0, 0, EPS * 10};
 
 // static const float R[EKF_M * EKF_M] = {
 //     // 2x2
@@ -57,14 +57,12 @@ static const float Q[EKF_N * EKF_N] = {
 
 static const float ER[EKF_M * EKF_M] = {
     // USED TO BE THE R MATRIX
-    0.0005, 0, 0, 0, 0, 0, 0, 0,
-    0, 0.0005, 0, 0, 0, 0, 0, 0,
-    0, 0, 0.0005, 0, 0, 0, 0, 0,
-    0, 0, 0, 0.0005, 0, 0, 0, 0,
-    0, 0, 0, 0, 0.0005, 0, 0, 0,
-    0, 0, 0, 0, 0, 0.0005, 0, 0,
-    0, 0, 0, 0, 0, 0, 0.0005, 0,
-    0, 0, 0, 0, 0, 0, 0, 0.0005};
+    0.0005, 0, 0, 0, 0, 0,
+    0, 0.0005, 0, 0, 0, 0,
+    0, 0, 0.0005, 0, 0, 0,
+    0, 0, 0, 0.0005, 0, 0,
+    0, 0, 0, 0, 0.0005, 0,
+    0, 0, 0, 0, 0, 0.0005};
 
 // So process model Jacobian is identity matrix
 // static const float F[EKF_N*EKF_N] = {   //
@@ -86,9 +84,7 @@ static const float ER[EKF_M * EKF_M] = {
 // };
 
 static const float H[EKF_M * EKF_N] = {
-    1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0,
     0, 0, 0, 1, 0, 0, 0, 0,
     0, 0, 0, 0, 1, 0, 0, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
@@ -133,6 +129,7 @@ float mz = 0.0;
 float ax = 0.0;
 float ay = 0.0;
 float az = 0.0;
+
 float a_x = 0.0;
 float a_y = 0.0;
 
@@ -150,13 +147,13 @@ constexpr Gestures DRAG_GESTURE = TI;
 constexpr Gestures LASER_GESTURE = T;
 constexpr Gestures DISABLE_MOUSE_GESTURE = TIMRP;
 constexpr Gestures SNIP_GESTURE = TMRP;
-// constexpr Gestures ALT_F4_GESTURE = TIRP;
+constexpr Gestures ALT_F4_GESTURE = TIRP;
 constexpr Gestures ALT_TAB_GESTURE = MRP;
 constexpr Gestures ALT_SHIFT_TAB_GESTURE = IRP;
 constexpr Gestures ZOOM_GESTURE = TP;
 constexpr Gestures SCROLL_GESTURE = TRP;
 
-int MOUSE_SENSITIVITY = 20;
+int MOUSE_SENSITIVITY = 15;
 
 constexpr float oneThousandth = 1.0 / 1000.0;
 
@@ -168,7 +165,7 @@ enum GestureState
   DRAG_EVENT,
   LASER,
   SNIP,
-  // ALT_F4,
+  ALT_F4,
   ALT_TAB,
   ALT_SHIFT_TAB,
   DISABLE_MOUSE,
@@ -311,14 +308,14 @@ void sendKeypress(uint8_t *_activeKey)
 void setup()
 {
 
-  Serial.begin(115200);
+  // Serial.begin(115200);
   // while (!Serial)
   // {
   //   Serial.println("cannot proceed!");
   //   delay(10);
   // }
 
-  Serial.println("Motion Control Glove - Starting");
+  // Serial.println("Motion Control Glove - Starting");
 
   ekf_initialize(&_ekf, Pdiag);
 
@@ -331,7 +328,7 @@ void setup()
       delay(10);
     }
   }
-  Serial.println("LSM6DSOX Found!");
+  // Serial.println("LSM6DSOX Found!");
   // Configure accelerometer/gyroscope
   sox.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
   sox.setGyroRange(LSM6DS_GYRO_RANGE_250_DPS);
@@ -379,7 +376,7 @@ void loop()
 
   sox.getEvent(&accel, &gyro, &temp);
 
-  ax = accel.acceleration.x + 0.32;
+  ax = accel.acceleration.x;
   ay = accel.acceleration.y + 0.32;
   az = accel.acceleration.z - 10.03;
 
@@ -387,12 +384,12 @@ void loop()
   gy = 0.01 + gyro.gyro.y;
   gz = 0.01 + gyro.gyro.z;
 
-  const float z[EKF_M] = {ay, gy, ax, gz, indexFinger, middleFinger, thumb, ringFinger};
+  const float z[EKF_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
 
   const float F[EKF_N * EKF_N] = {
-      1, 0, 0, 0, 0, 0, 0, 0,
+      1, dt, 0, 0, 0, 0, 0, 0,
       0, 1, 0, 0, 0, 0, 0, 0,
-      0, 0, 1, 0, 0, 0, 0, 0,
+      0, 0, 1, dt, 0, 0, 0, 0,
       0, 0, 0, 1, 0, 0, 0, 0,
       0, 0, 0, 0, 1, 0, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0,
@@ -400,12 +397,12 @@ void loop()
       0, 0, 0, 0, 0, 0, 0, 1};
 
   // Process model f(x)
-  const float fx[EKF_N] = {_ekf.x[0], , _ekf.x[1], _ekf.x[2], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]}; // velocity y , velocity z
+  const float fx[EKF_N] = {_ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]}; // velocity y , velocity z
 
   // Run the prediction step of the eKF
   ekf_predict(&_ekf, fx, F, Q);
 
-  const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1], _ekf.x[2], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]};
+  const float hx[EKF_M] = {_ekf.x[1], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]};
   //   hx[2] = .9987 * this->x[1] + .001;
 
   // const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1] };
@@ -424,7 +421,6 @@ void loop()
   to see if there may be a more optimal value*/
   my = MOUSE_SENSITIVITY * _ekf.x[1];
   mz = -MOUSE_SENSITIVITY * _ekf.x[3];
-  a_y = _ekf.x[0];
   a_x = _ekf.x[2];
 
   indexFiltered = _ekf.x[4];
@@ -438,16 +434,11 @@ void loop()
     blehid.mouseMove(mz, my);
   }
 
-  Serial.println("a_x, a_y: ");
-  Serial.print(a_x);
-  Serial.print(", ");
-  Serial.print(a_y);
-
   ////
   ////GESTURE TESTING
   previousGesture = currentGesture;
   currentGesture = gesture(thumbFiltered, indexFiltered, middleFiltered, ringFiltered, pinkyFiltered);
-  Serial.println(currentGesture);
+  // Serial.println(currentGesture);
 
   switch (gestureState)
   {
@@ -494,13 +485,13 @@ void loop()
       gestureState = SNIP;
     }
 
-    // else if (currentGesture == ALT_F4_GESTURE)
-    // {
-      // mouseEnabled = false;
-      // activeKey[0] = HID_KEY_F4;                                                            // 0x3D
-      // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
-      // gestureState = ALT_F4;
-    // }
+    else if (currentGesture == ALT_F4_GESTURE)
+    {
+      mouseEnabled = false;
+      activeKey[0] = HID_KEY_F4;                                                            // 0x3D
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
+      gestureState = ALT_F4;
+    }
 
     else if (currentGesture == ALT_TAB_GESTURE)
     {
@@ -524,16 +515,18 @@ void loop()
       mouseEnabled = false;
 
       // scroll up
-      if (a_x >= 3)
+      if (a_x > 2)
       {
         blehid.mouseScroll(1);
+        delay(200);
         gestureState = SCROLL;
       }
 
       // scroll down
-      else if (a_x <= -3)
+      else if (a_x < -2)
       {
         blehid.mouseScroll(-1);
+        delay(200);
         gestureState = SCROLL;
       }
     }
@@ -543,18 +536,20 @@ void loop()
       mouseEnabled = false;
 
       // zoom in
-      if (a_x >= 3)
+      if (a_x > 2)
       {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
         blehid.mouseScroll(-1);
+        delay(300);
         gestureState = ZOOM;
       }
 
       // zoom out
-      else if (a_x <= -3)
+      else if (a_x < -2)
       {
         blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
         blehid.mouseScroll(1);
+        delay(300);
         gestureState = ZOOM;
       }
     }
@@ -622,14 +617,14 @@ void loop()
     }
     break;
 
-  // case ALT_F4:
-    // if (currentGesture == NONE || previousGesture != currentGesture)
-    // {
-      // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      // blehid.keyRelease();
-      // gestureState = IDLE;
-    // }
-    // break;
+  case ALT_F4:
+    if (currentGesture == NONE || previousGesture != currentGesture)
+    {
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      blehid.keyRelease();
+      gestureState = IDLE;
+    }
+    break;
 
   case ALT_TAB:
     if (currentGesture == NONE || previousGesture != currentGesture)
@@ -650,21 +645,6 @@ void loop()
     break;
 
   case SCROLL:
-    // scroll up
-    if (a_x >= 3)
-    {
-      blehid.mouseScroll(1);
-    }
-
-    // scroll down
-    else if (a_x <= -3)
-    {
-      blehid.mouseScroll(-1);
-    }
-    else
-    {
-      blehid.mouseScroll(0);
-    }
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
@@ -674,21 +654,6 @@ void loop()
     break;
 
   case ZOOM:
-    // zoom in
-    if (a_x >= 3)
-    {
-      blehid.mouseScroll(-1);
-    }
-
-    // zoom out
-    else if (a_x <= -3)
-    {
-      blehid.mouseScroll(1);
-    }
-    else
-    {
-      blehid.mouseScroll(0);
-    }
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       blehid.mouseScroll(0);
@@ -709,11 +674,11 @@ void loop()
 
   int index = matchButton(pinReadings);
 
-  if (index != -1)
-  {
-    Serial.print("Detected: ");
-    Serial.println(buttonNames[index]);
-  }
+  // if (index != -1)
+  // {
+  // Serial.print("Detected: ");
+  // Serial.println(buttonNames[index]);
+  // }
 
   if (!pressed)
   {
@@ -866,11 +831,11 @@ void loop()
   // Serial.print(pinkyFiltered); // pinky
   // Serial.print(" ");
 
-  Serial.print(MOUSE_SENSITIVITY);
-  Serial.print(" ");
+  // Serial.print(MOUSE_SENSITIVITY);
+  // Serial.print(" ");
 
-  Serial.print(curr * oneThousandth);
-  Serial.println();
+  // Serial.print(curr * oneThousandth);
+  // Serial.println();
   // Serial.print("mouseEnabled: %d\n", mouseEnabled);
   // Serial.print("toggleMouse: %d", toggleMouse);
 }
