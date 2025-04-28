@@ -217,7 +217,7 @@ int matchButton(const int *pinReadings)
 void pressModifierAndKey(uint8_t number)
 {
   int modifier = 0x08;            // windows key
-  if (number >= 0 && number <= 9) // windows plus num 1-9
+  if (number <= 9) // windows plus num 1-9
   {
     activeKey[0] = HID_KEY_1 + number; // 0x1E
   }
