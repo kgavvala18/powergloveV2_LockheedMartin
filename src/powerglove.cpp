@@ -207,12 +207,12 @@ const int *buttonSignatures[] = {
     upArrow, rightArrow, downArrow, buttonCenter, buttonSelect,
     buttonStart, buttonB, buttonA};
 
-const char *buttonNames[] = {
-    "Button 0", "Button 1", "Button 2", "Button 3", "Button 4",
-    "Button 5", "Button 6", "Button 7", "Button 8", "Button 9",
-    "Button Prog", "Button Enter", "Left Arrow", "Up Arrow",
-    "Right Arrow", "Down Arrow", "Button Center", "Button Select",
-    "Button Start", "Button B", "Button A"};
+// const char *buttonNames[] = {
+//     "Button 0", "Button 1", "Button 2", "Button 3", "Button 4",
+//     "Button 5", "Button 6", "Button 7", "Button 8", "Button 9",
+//     "Button Prog", "Button Enter", "Left Arrow", "Up Arrow",
+//     "Right Arrow", "Down Arrow", "Button Center", "Button Select",
+//     "Button Start", "Button B", "Button A"};
 
 const int inputPins[] = {2, 5, 6, 9, 10, 11, 12, 13, 23};
 const int numPins = 9;
@@ -258,49 +258,51 @@ int matchButton(const int *pinReadings)
 }
 
 // Function to send windows key + number or other key depending on button pressed
-void pressWinNumber(uint8_t number)
+void pressModifierAndKey(uint8_t number)
 {
-  int modifier = 0x08; // windows key
-  if (number == 0)     // press only windows key
+  int modifier = 0x08;            // windows key
+  if (number >= 0 && number <= 9) // windows plus num 1-9
   {
-    blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, modifier, emptyKeycode);
-    blehid.keyRelease();
-    return;
+    activeKey[0] = HID_KEY_1 + number; // 0x1E
   }
-  if (number >= 1 && number <= 9) // windows plus num 1-9
+  else if (number == 12) // left arrow = win + tab
   {
-    activeKey[0] = 0x1E + (number - 1);
+    activeKey[0] = HID_KEY_TAB;
   }
-  else if (number == 13) // up arrow = win + tab
+  else if (number == 13) // up arrow = alt + f4
   {
-    activeKey[0] = 0x2B; // tab
+    modifier = KEYBOARD_MODIFIER_LEFTALT;
+    activeKey[0] = HID_KEY_F4; // 0x2B
+  }
+  else if (number == 14) // right arrow = alt + tab
+  {
+    modifier = KEYBOARD_MODIFIER_LEFTALT; // 0x04
+    activeKey[0] = HID_KEY_TAB;
   }
   else if (number == 15) // down arrow = win + d
   {
-    activeKey[0] = 0x07; // d
+    activeKey[0] = HID_KEY_D; // 0x07
   }
   else if (number == 17) // select = win + shift + s (snipping tool)
   {
-    modifier = 0x08 | 0x02; // windows + shift
-    activeKey[0] = 0x16;    // s
+    modifier = modifier | KEYBOARD_MODIFIER_LEFTSHIFT; // windows + shift
+    activeKey[0] = HID_KEY_S;                          // 0x16
+  }
+  else if (number == 18)
+  {
+    activeKey[0] = HID_KEY_E;
   }
   else if (number == 19) // B button = ctrl + v
   {
-    modifier = 0x01;     // l-ctrl
-    activeKey[0] = 0x19; // v
+    modifier = KEYBOARD_MODIFIER_LEFTCTRL; // l-ctrl
+    activeKey[0] = HID_KEY_V;              // 0x19
   }
   else if (number == 20) // A button = ctrl + c
   {
-    modifier = 0x01;     // l-ctrl
-    activeKey[0] = 0x06; // c
+    modifier = KEYBOARD_MODIFIER_LEFTCTRL; // l-ctrl
+    activeKey[0] = HID_KEY_C;              // 0x06
   }
   blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, modifier, activeKey);
-  blehid.keyRelease();
-}
-
-void sendKeypress(uint8_t *_activeKey)
-{
-  blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x0, _activeKey);
   blehid.keyRelease();
 }
 
@@ -682,9 +684,9 @@ void loop()
 
   if (!pressed)
   {
-    if (index >= 0 && index <= 9)
+    if ((index >= 0 && index <= 9) || index == 12 || index == 14 || index == 17 || index == 18 || index == 19 || index == 20)
     {
-      pressWinNumber(index);
+      pressModifierAndKey(index);
       pressed = true;
       delay(100);
     }
@@ -692,24 +694,15 @@ void loop()
     switch (index)
     {
     case 10: // prog button
-      if (program)
-        program = false;
-      else
-        program = true;
+      program = !program;
       pressed = true;
       delay(100);
       break;
 
     case 11: // enter button
       activeKey[0] = 0x28;
-      sendKeypress(activeKey);
-      pressed = true;
-      delay(100);
-      break;
-
-    case 12: // left arrow      // CHANGE TO WIN TAB
-      activeKey[0] = 0x50;
-      sendKeypress(activeKey);
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x0, activeKey);
+      blehid.keyRelease();
       pressed = true;
       delay(100);
       break;
@@ -722,14 +715,7 @@ void loop()
         delay(100);
         break;
       }
-      pressWinNumber(index);
-      pressed = true;
-      delay(100);
-      break;
-
-    case 14: // right arrow   // CHANGE TO ALT TAB
-      activeKey[0] = 0x4F;
-      sendKeypress(activeKey);
+      pressModifierAndKey(index);
       pressed = true;
       delay(100);
       break;
@@ -742,7 +728,7 @@ void loop()
         delay(100);
         break;
       }
-      pressWinNumber(index);
+      pressModifierAndKey(index);
       pressed = true;
       delay(100);
       break;
@@ -757,34 +743,6 @@ void loop()
       blehid.mouseMove(127, 110);
       blehid.mouseMove(90, 0);
 
-      pressed = true;
-      delay(100);
-      break;
-
-    case 17: // select button = win + shift + s
-      pressWinNumber(index);
-      pressed = true;
-      delay(100);
-      break;
-
-    case 18: // start button = win - e
-      pressed = true;
-      delay(100);
-      break;
-
-    case 19: // B - paste
-      pressWinNumber(index);
-      pressed = true;
-      delay(100);
-      break;
-
-    case 20: // A - copy
-      pressWinNumber(index);
-      pressed = true;
-      delay(100);
-      break;
-
-    case 21:
       pressed = true;
       delay(100);
       break;
