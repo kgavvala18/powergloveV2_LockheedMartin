@@ -225,6 +225,10 @@ void pressModifierAndKey(uint8_t number)
   {
     activeKey[0] = HID_KEY_1 + number; // 0x1E
   }
+  else if (number == 11) // enter = win + l
+  {
+    activeKey[0] = HID_KEY_L;
+  }
   else if (number == 12) // left arrow = win + tab
   {
     activeKey[0] = HID_KEY_TAB;
@@ -645,7 +649,7 @@ void loop()
 
   if (!pressed)
   {
-    if ((index >= 0 && index <= 9) || index == 12 || index == 14 || index == 17 || index == 18 || index == 19 || index == 20)
+    if ((index >= 0 && index <= 9) || index == 11 || index == 12 || index == 14 || index == 17 || index == 18 || index == 19 || index == 20)
     {
       pressModifierAndKey(index);
       pressed = true;
@@ -660,18 +664,10 @@ void loop()
       delay(100);
       break;
 
-    case 11: // enter button
-      activeKey[0] = 0x28;
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, 0x0, activeKey);
-      blehid.keyRelease();
-      pressed = true;
-      delay(100);
-      break;
-
     case 13: // up arrow = alt+f4
       if (program)
       {
-        if (MOUSE_SENSITIVITY < 30)
+        if (MOUSE_SENSITIVITY < 50)
           MOUSE_SENSITIVITY++;
         delay(100);
         break;
