@@ -7,8 +7,8 @@
 #define THUMB_THRES 60
 #define INDEX_THRES 40
 #define MIDDLE_THRES 50
-#define RING_THRES 35  // to be determined
-#define PINKY_THRES 42 // to be determined
+#define RING_THRES 35
+#define PINKY_THRES 42
 
 typedef enum Gestures
 {
@@ -20,6 +20,7 @@ typedef enum Gestures
     R - ring finger
     P - pinky finger
     */
+
     // five fingers
     TIMRP,
 
@@ -65,7 +66,7 @@ typedef enum Gestures
     NONE
 } Gestures;
 
-/// @private
+// this function returns the gesture from the sensor values
 static inline Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
 {
     bool thumbBool, indexBool, middleBool, ringBool, pinkyBool;
@@ -76,12 +77,15 @@ static inline Gestures gesture(float thumb, float index, float middle, float rin
     ringBool = ring > RING_THRES;
     pinkyBool = pinky > PINKY_THRES;
 
+    // turning it into a bitmap for fast checking
     int mask = (thumbBool << 4) |
                (indexBool << 3) |
                (middleBool << 2) |
                (ringBool << 1) |
                (pinkyBool << 0);
 
+    // fingers go from most flexed to least flexed
+    // to avoid ordering issues
     switch (mask)
     {
 
