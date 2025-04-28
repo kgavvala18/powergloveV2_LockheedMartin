@@ -1,23 +1,10 @@
-// #include <tinyekf.hpp>
-
-/*this is an implementation of mouse control using the gyroscope of the LSM6DSOX IMU
-An Extended Kalman Filter is used to smooth the acceleration values
-which are scaled and used directly for control input
-the KB2040 board was used to test this implmentation using usb hid and we are still
-converting this to use on the feather nRF52840 sense board with BLe HID
-  */
-
-constexpr int EKF_N = 8; //  States: Y angular disp, Y ang vel, Z ang disp, Z ang vel, pointer, middle, thumb
-// Want 9: Y lin Acc, Y lin Vel, Z lin Acc, Z lin Vel, Y ang Vel, Z ang Vel, pointer, middle, thumb, ring, pinky
-constexpr int EKF_M = 6; //  Measurements: Y ang vel, Z ang vel, pointer, middle, thumb, ring, pinky
-// Want 7: Y lin Acc, Z lin Acc, Y ang Vel, Z ang Vel, pointer, middle, thumb, ring pinky
+constexpr int EKF_N = 8; // EKF matrix dimensions
+constexpr int EKF_M = 6;
 
 #include <bluefruit.h>
-// #include <Adafruit_NeoPixel.h>
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_Sensor.h>
 #include <tinyekf.h>
-// #include <Mouse.h>
 #include <gesture.h>
 #include <math.h>
 #include <Adafruit_TinyUSB.h>
@@ -25,18 +12,12 @@ constexpr int EKF_M = 6; //  Measurements: Y ang vel, Z ang vel, pointer, middle
 BLEDis bledis;
 BLEHidAdafruit blehid;
 
+// Extended Kalman Filter setup
 static const float EPS = 1.5e-6;
 
 static const float Pdiag[EKF_N] = {0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001};
 
-// static const float Q[EKF_N * EKF_N] = {
-
-//     EPS, 0, 0, 0,
-//     0, EPS * 10, 0, 0,
-//     0, 0, EPS, 0,
-//     0, 0, 0, EPS * 10};
 static const float Q[EKF_N * EKF_N] = {
-
     EPS, 0, 0, 0, 0, 0, 0, 0,
     0, EPS * 10, 0, 0, 0, 0, 0, 0,
     0, 0, EPS, 0, 0, 0, 0, 0,
@@ -44,44 +25,18 @@ static const float Q[EKF_N * EKF_N] = {
     0, 0, 0, 0, EPS * 10, 0, 0, 0,
     0, 0, 0, 0, 0, EPS * 10, 0, 0,
     0, 0, 0, 0, 0, 0, EPS * 10, 0,
-    0, 0, 0, 0, 0, 0, 0, EPS * 10};
+    0, 0, 0, 0, 0, 0, 0, EPS * 10
+};
 
-// static const float R[EKF_M * EKF_M] = {
-//     // 2x2
-
-//     0.0005,
-//     0,
-//     0,
-//     0.0005,
-// };
-
+// error matrix
 static const float ER[EKF_M * EKF_M] = {
-    // USED TO BE THE R MATRIX
     0.0005, 0, 0, 0, 0, 0,
     0, 0.0005, 0, 0, 0, 0,
     0, 0, 0.0005, 0, 0, 0,
     0, 0, 0, 0.0005, 0, 0,
     0, 0, 0, 0, 0.0005, 0,
-    0, 0, 0, 0, 0, 0.0005};
-
-// So process model Jacobian is identity matrix
-// static const float F[EKF_N*EKF_N] = {   //
-//     1, 1, 0, 0,
-//     0, 1, 0, 0,
-//     0, 0, 1, 1,
-//     1, 1, 0, 1
-// };
-
-// static const float H[EKF_M * EKF_N] = {
-//     0,
-//     1,
-//     0,
-//     0,
-//     0,
-//     0,
-//     0,
-//     1,
-// };
+    0, 0, 0, 0, 0, 0.0005
+};
 
 static const float H[EKF_M * EKF_N] = {
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -89,21 +44,18 @@ static const float H[EKF_M * EKF_N] = {
     0, 0, 0, 0, 1, 0, 0, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 0, 0, 1};
+    0, 0, 0, 0, 0, 0, 0, 1
+};
 
 static ekf_t _ekf;
 
+// instantiating variables and devices
 Adafruit_LSM6DSOX sox;
 float prev = 0.0;
 float curr = 0.0;
-float dt = 0.01;
+float dt   = 0.01;
 
-// constexpr int MIDDLE_FINGER_PIN = A0;
-// constexpr int INDEX_FINGER_PIN = A1;
-// constexpr int THUMB_PIN = A2;
-// constexpr int RING_FINGER_PIN = A5;
-// constexpr int PINKY_FINGER_PIN = A4;
-
+// fingers
 int middleFinger;
 int indexFinger;
 int thumb;
@@ -112,17 +64,19 @@ int pinkyFinger;
 
 // needed for gesture key presses
 uint8_t emptyKeycode[6] = {0};
-uint8_t activeKey[6] = {0};
+uint8_t activeKey[6]    = {0};
 
 bool mouseEnabled = true;
-bool toggleMouse = false;
+bool toggleMouse  = false;
 
-float indexFiltered = 0.0;
+// filtered version of the fingers
+float indexFiltered  = 0.0;
 float middleFiltered = 0.0;
-float thumbFiltered = 0.0;
-float pinkyFiltered = 0.0;
-float ringFiltered = 0.0;
+float thumbFiltered  = 0.0;
+float pinkyFiltered  = 0.0;
+float ringFiltered   = 0.0;
 
+// sensor data
 float my = 0.0;
 float mz = 0.0;
 
@@ -137,26 +91,33 @@ float gx = 0.0;
 float gy = 0.0;
 float gz = 0.0;
 
+// sensors
 sensors_event_t accel;
 sensors_event_t gyro;
 sensors_event_t temp;
 
-constexpr Gestures LEFT_CLICK_GESTURE = I;
-constexpr Gestures RIGHT_CLICK_GESTURE = M;
-constexpr Gestures DRAG_GESTURE = TI;
-constexpr Gestures LASER_GESTURE = T;
-constexpr Gestures DISABLE_MOUSE_GESTURE = TIMRP;
-constexpr Gestures SNIP_GESTURE = TMRP;
-constexpr Gestures ALT_F4_GESTURE = TIRP;
-constexpr Gestures ALT_TAB_GESTURE = MRP;
-constexpr Gestures ALT_SHIFT_TAB_GESTURE = IRP;
-constexpr Gestures ZOOM_GESTURE = TP;
-constexpr Gestures SCROLL_GESTURE = TRP;
+// defining the gesture states and correlating them to gestures
+// each letter corresponds to a finger
+// T - thumb, I - index, M - middle, R - ring, and P - pinky
+// having a letter means that finger is flexed
+constexpr Gestures LEFT_CLICK_GESTURE    = I;
+constexpr Gestures RIGHT_CLICK_GESTURE   = M;
+constexpr Gestures DRAG_GESTURE          = TI;
+constexpr Gestures LASER_GESTURE         = T;
+constexpr Gestures DISABLE_MOUSE_GESTURE = IMR;
+constexpr Gestures SNIP_GESTURE          = TMRP;
+constexpr Gestures ALT_F4_GESTURE        = TIRP;
+constexpr Gestures ALT_TAB_GESTURE       = MRP;
+constexpr Gestures WIN_TAB_GESTURE       = IRP;
+constexpr Gestures ZOOM_GESTURE          = TP;
+constexpr Gestures SCROLL_GESTURE        = TRP;
 
 int MOUSE_SENSITIVITY = 15;
 
+// faster to precompute division and then do multiplication
 constexpr float oneThousandth = 1.0 / 1000.0;
 
+// defining gesture states
 enum GestureState
 {
   IDLE,
@@ -165,57 +126,52 @@ enum GestureState
   DRAG_EVENT,
   LASER,
   SNIP,
-  ALT_F4,
+  // ALT_F4, // (easter egg)
   ALT_TAB,
-  ALT_SHIFT_TAB,
+  WIN_TAB,
   DISABLE_MOUSE,
   ZOOM,
   SCROLL
 };
 
 GestureState gestureState = IDLE;
-Gestures previousGesture = NONE;
-Gestures currentGesture = NONE;
+Gestures previousGesture  = NONE;
+Gestures currentGesture   = NONE;
 
-const int button_none[] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
-const int button0[] = {1, 0, 0, 0, 0, 0, 1, 0, 1};
-const int button1[] = {1, 0, 0, 0, 0, 1, 1, 0, 1};
-const int button2[] = {1, 0, 0, 0, 0, 0, 1, 1, 1};
-const int button3[] = {1, 1, 0, 0, 1, 0, 0, 0, 0};
-const int button4[] = {1, 1, 0, 1, 1, 0, 0, 0, 0};
-const int button5[] = {1, 0, 0, 0, 0, 1, 1, 1, 0};
-const int button6[] = {1, 0, 0, 0, 0, 1, 1, 1, 1};
-const int button7[] = {1, 0, 0, 0, 1, 0, 0, 0, 0};
-const int button8[] = {1, 0, 0, 1, 1, 0, 0, 0, 0};
-const int button9[] = {1, 0, 1, 0, 1, 0, 0, 0, 0};
-const int buttonProg[] = {1, 1, 1, 1, 1, 0, 0, 0, 0};
-const int buttonEnter[] = {1, 0, 1, 1, 1, 0, 0, 0, 0};
-const int leftArrow[] = {1, 0, 0, 0, 0, 1, 1, 0, 0};
-const int upArrow[] = {1, 0, 0, 0, 0, 0, 1, 1, 0};
-const int rightArrow[] = {1, 0, 0, 0, 0, 0, 1, 0, 0};
-const int downArrow[] = {1, 0, 0, 0, 0, 1, 0, 1, 1};
+// defining buttons
+const int button_none[]  = {1, 0, 0, 0, 0, 0, 0, 0, 0};
+const int button0[]      = {1, 0, 0, 0, 0, 0, 1, 0, 1};
+const int button1[]      = {1, 0, 0, 0, 0, 1, 1, 0, 1};
+const int button2[]      = {1, 0, 0, 0, 0, 0, 1, 1, 1};
+const int button3[]      = {1, 1, 0, 0, 1, 0, 0, 0, 0};
+const int button4[]      = {1, 1, 0, 1, 1, 0, 0, 0, 0};
+const int button5[]      = {1, 0, 0, 0, 0, 1, 1, 1, 0};
+const int button6[]      = {1, 0, 0, 0, 0, 1, 1, 1, 1};
+const int button7[]      = {1, 0, 0, 0, 1, 0, 0, 0, 0};
+const int button8[]      = {1, 0, 0, 1, 1, 0, 0, 0, 0};
+const int button9[]      = {1, 0, 1, 0, 1, 0, 0, 0, 0};
+const int buttonProg[]   = {1, 1, 1, 1, 1, 0, 0, 0, 0};
+const int buttonEnter[]  = {1, 0, 1, 1, 1, 0, 0, 0, 0};
+const int leftArrow[]    = {1, 0, 0, 0, 0, 1, 1, 0, 0};
+const int upArrow[]      = {1, 0, 0, 0, 0, 0, 1, 1, 0};
+const int rightArrow[]   = {1, 0, 0, 0, 0, 0, 1, 0, 0};
+const int downArrow[]    = {1, 0, 0, 0, 0, 1, 0, 1, 1};
 const int buttonCenter[] = {1, 0, 0, 0, 0, 0, 0, 1, 1};
 const int buttonSelect[] = {1, 1, 1, 1, 0, 0, 0, 0, 0};
-const int buttonStart[] = {1, 1, 1, 0, 0, 0, 0, 0, 0};
-const int buttonB[] = {1, 1, 1, 0, 1, 0, 0, 0, 0};
-const int buttonA[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-const int numButtons = 21;
+const int buttonStart[]  = {1, 1, 1, 0, 0, 0, 0, 0, 0};
+const int buttonB[]      = {1, 1, 1, 0, 1, 0, 0, 0, 0};
+const int buttonA[]      = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+const int numButtons     = 21;
 
 const int *buttonSignatures[] = {
     button0, button1, button2, button3, button4, button5, button6,
     button7, button8, button9, buttonProg, buttonEnter, leftArrow,
     upArrow, rightArrow, downArrow, buttonCenter, buttonSelect,
-    buttonStart, buttonB, buttonA};
-
-// const char *buttonNames[] = {
-//     "Button 0", "Button 1", "Button 2", "Button 3", "Button 4",
-//     "Button 5", "Button 6", "Button 7", "Button 8", "Button 9",
-//     "Button Prog", "Button Enter", "Left Arrow", "Up Arrow",
-//     "Right Arrow", "Down Arrow", "Button Center", "Button Select",
-//     "Button Start", "Button B", "Button A"};
+    buttonStart, buttonB, buttonA
+};
 
 const int inputPins[] = {2, 5, 6, 9, 10, 11, 12, 13, 23};
-const int numPins = 9;
+const int numPins     = 9;
 int pinReadings[numPins];
 
 bool pressed = false;
@@ -309,28 +265,16 @@ void pressModifierAndKey(uint8_t number)
 // the setup routine runs once when you press reset:
 void setup()
 {
-
-  // Serial.begin(115200);
-  // while (!Serial)
-  // {
-  //   Serial.println("cannot proceed!");
-  //   delay(10);
-  // }
-
-  // Serial.println("Motion Control Glove - Starting");
-
   ekf_initialize(&_ekf, Pdiag);
 
   if (!sox.begin_SPI(1))
   {
-    // if (!sox.begin_SPI(LSM_CS, LSM_SCK, LSM_MISO, LSM_MOSI)) {
-    // Serial.println("Failed to find LSM6DSOX chip");
     while (1)
     {
       delay(10);
     }
   }
-  // Serial.println("LSM6DSOX Found!");
+
   // Configure accelerometer/gyroscope
   sox.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
   sox.setGyroRange(LSM6DS_GYRO_RANGE_250_DPS);
@@ -358,8 +302,8 @@ void setup()
 
   // Set up and start advertising
   startAdv();
-  pinMode(22, OUTPUT); // move the laser to a digital pin instead of analog
-  digitalWrite(22, LOW);
+  pinMode(22, OUTPUT); // pin 22 is the laser
+  digitalWrite(22, LOW); // ensure it starts off
 }
 
 // the loop routine runs over and over again forever:
@@ -370,6 +314,7 @@ void loop()
   dt = (curr - prev) * oneThousandth;
   prev = curr;
 
+  // get flex sensor values for fingers
   middleFinger = analogRead(A0);
   indexFinger = analogRead(A1);
   thumb = analogRead(A2);
@@ -378,14 +323,17 @@ void loop()
 
   sox.getEvent(&accel, &gyro, &temp);
 
+  // acceleration with offsets
   ax = accel.acceleration.x;
   ay = accel.acceleration.y + 0.32;
   az = accel.acceleration.z - 10.03;
 
+  // angular velocity with offsets
   gx = gyro.gyro.x;
   gy = 0.01 + gyro.gyro.y;
   gz = 0.01 + gyro.gyro.z;
 
+  // perform filtering
   const float z[EKF_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
 
   const float F[EKF_N * EKF_N] = {
@@ -396,7 +344,8 @@ void loop()
       0, 0, 0, 0, 1, 0, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0,
       0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 0, 0, 1};
+      0, 0, 0, 0, 0, 0, 0, 1
+    };
 
   // Process model f(x)
   const float fx[EKF_N] = {_ekf.x[0] + dt * _ekf.x[1], _ekf.x[1], _ekf.x[2] + dt * _ekf.x[3], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]}; // velocity y , velocity z
@@ -405,26 +354,17 @@ void loop()
   ekf_predict(&_ekf, fx, F, Q);
 
   const float hx[EKF_M] = {_ekf.x[1], _ekf.x[3], _ekf.x[4], _ekf.x[5], _ekf.x[6], _ekf.x[7]};
-  //   hx[2] = .9987 * this->x[1] + .001;
-
-  // const float hx[EKF_M] = {_ekf.x[0], _ekf.x[1] };
 
   // Run the update step
   ekf_update(&_ekf, z, hx, H, ER);
 
-  // }
-  // else{
-  //   vx = 0;
-  //   vy = 0;
-  // };
-
-  // scale the acceleration values by 20
-  /*the scaling factor was empiricaly determined. We need to find why this works
-  to see if there may be a more optimal value*/
+  // scale the acceleration values by MOUSE_SENSITIVITY
   my = MOUSE_SENSITIVITY * _ekf.x[1];
   mz = -MOUSE_SENSITIVITY * _ekf.x[3];
+  
   a_x = _ekf.x[2];
 
+  // get the filtered values
   indexFiltered = _ekf.x[4];
   middleFiltered = _ekf.x[5];
   thumbFiltered = _ekf.x[6];
@@ -436,12 +376,11 @@ void loop()
     blehid.mouseMove(mz, my);
   }
 
-  ////
-  ////GESTURE TESTING
+  //// GESTURES
   previousGesture = currentGesture;
   currentGesture = gesture(thumbFiltered, indexFiltered, middleFiltered, ringFiltered, pinkyFiltered);
-  // Serial.println(currentGesture);
 
+  // gesture state code
   switch (gestureState)
   {
   case IDLE:
@@ -451,6 +390,7 @@ void loop()
       gestureState = DRAG_EVENT;
     }
 
+    // disable mouse on clicks to make it easier to click small buttons
     else if (currentGesture == LEFT_CLICK_GESTURE)
     {
       blehid.mouseButtonPress(MOUSE_BUTTON_LEFT);
@@ -468,10 +408,11 @@ void loop()
     else if (currentGesture == LASER_GESTURE)
     {
       mouseEnabled = false;
-      digitalWrite(22, HIGH);
+      digitalWrite(22, HIGH); // pin 22 is for the laser
       gestureState = LASER;
     }
 
+    // flip a mouse toggle to prevent user from needing to hold it down
     else if (currentGesture == DISABLE_MOUSE_GESTURE)
     {
       toggleMouse = !toggleMouse;
@@ -481,54 +422,52 @@ void loop()
 
     else if (currentGesture == SNIP_GESTURE)
     {
-      activeKey[0] = HID_KEY_S; // 0x16
-      // 0xA should work (left shift + left windows)
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTSHIFT + KEYBOARD_MODIFIER_LEFTGUI, activeKey); // previously 0x28
+      activeKey[0] = HID_KEY_S;
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTSHIFT + KEYBOARD_MODIFIER_LEFTGUI, activeKey);
       gestureState = SNIP;
     }
 
-    else if (currentGesture == ALT_F4_GESTURE)
-    {
-      mouseEnabled = false;
-      activeKey[0] = HID_KEY_F4;                                                            // 0x3D
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
-      gestureState = ALT_F4;
-    }
+    // else if (currentGesture == ALT_F4_GESTURE)
+    // {
+    //   mouseEnabled = false;
+    //   activeKey[0] = HID_KEY_F4;
+    //   blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey);
+    //   gestureState = ALT_F4;
+    // }
 
     else if (currentGesture == ALT_TAB_GESTURE)
     {
       mouseEnabled = false;
-      activeKey[0] = HID_KEY_TAB;                                                           // 0x2B
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey); // 0x04
+      activeKey[0] = HID_KEY_TAB;
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT, activeKey);
       gestureState = ALT_TAB;
     }
 
-    else if (currentGesture == ALT_SHIFT_TAB_GESTURE)
+    else if (currentGesture == WIN_TAB_GESTURE)
     {
       mouseEnabled = false;
-      activeKey[0] = HID_KEY_TAB; // 0x2B
-      // 0x6 should work (left alt + left shift)
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTALT + KEYBOARD_MODIFIER_LEFTSHIFT, activeKey); // previously 0x24
-      gestureState = ALT_SHIFT_TAB;
+      activeKey[0] = HID_KEY_TAB;
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTGUI, activeKey);
+      gestureState = WIN_TAB;
     }
 
     else if (currentGesture == SCROLL_GESTURE)
     {
       mouseEnabled = false;
 
-      // scroll up
+      // scroll up (tilt up)
       if (a_x > 2)
       {
-        blehid.mouseScroll(1);
-        delay(200);
+        blehid.mouseScroll(1); // 1 means it is scrolling forward
+        delay(200); // delay to make it usable
         gestureState = SCROLL;
       }
 
-      // scroll down
+      // scroll down (tilt down)
       else if (a_x < -2)
       {
-        blehid.mouseScroll(-1);
-        delay(200);
+        blehid.mouseScroll(-1); // -1 means it is scrolling backward
+        delay(200); // delay to make it usable
         gestureState = SCROLL;
       }
     }
@@ -540,23 +479,25 @@ void loop()
       // zoom in
       if (a_x > 2)
       {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
-        blehid.mouseScroll(-1);
-        delay(300);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode);
+        blehid.mouseScroll(-1); // -1 means it is scrolling backward
+        delay(300); // delay to make it usable
         gestureState = ZOOM;
       }
 
       // zoom out
       else if (a_x < -2)
       {
-        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
-        blehid.mouseScroll(1);
-        delay(300);
+        blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode);
+        blehid.mouseScroll(1); // 1 means it is scrolling forward
+        delay(300); // delay to make it usable
         gestureState = ZOOM;
       }
     }
     break;
 
+    // this part is for checking if gesture is still active or how to
+    // transition from that gesture
   case LEFT_CLICK_EVENT:
     if (currentGesture == NONE)
     {
@@ -564,6 +505,8 @@ void loop()
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
       gestureState = IDLE;
     }
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     else if (previousGesture != currentGesture)
     {
       mouseEnabled = true;
@@ -578,6 +521,8 @@ void loop()
       blehid.mouseButtonRelease(MOUSE_BUTTON_RIGHT);
       gestureState = IDLE;
     }
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     else if (previousGesture != currentGesture)
     {
       mouseEnabled = true;
@@ -586,6 +531,8 @@ void loop()
     break;
 
   case DRAG_EVENT:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       blehid.mouseButtonRelease(MOUSE_BUTTON_LEFT);
@@ -594,10 +541,12 @@ void loop()
     break;
 
   case LASER:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
-      digitalWrite(22, LOW);
+      digitalWrite(22, LOW); // pin 22 is for the laser (turn off)
       gestureState = IDLE;
     }
     break;
@@ -611,46 +560,59 @@ void loop()
     break;
 
   case SNIP:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      // HID_KEY_NONE means no keyboard modifier is pressed
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
       blehid.keyRelease();
       gestureState = IDLE;
     }
     break;
 
-  case ALT_F4:
-    if (currentGesture == NONE || previousGesture != currentGesture)
-    {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-      blehid.keyRelease();
-      gestureState = IDLE;
-    }
-    break;
+//   case ALT_F4:
+        // ensures that if a user did not intend for this gesture to happen
+        // that it tries again
+//     if (currentGesture == NONE || previousGesture != currentGesture)
+//     {
+//       blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
+//       blehid.keyRelease();
+//       gestureState = IDLE;
+//     }
+//     break;
 
   case ALT_TAB:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      // HID_KEY_NONE means no keyboard modifier is pressed
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
       blehid.keyRelease();
       gestureState = IDLE;
     }
     break;
 
-  case ALT_SHIFT_TAB:
+  case WIN_TAB:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      // HID_KEY_NONE means no keyboard modifier is pressed
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
       blehid.keyRelease();
       gestureState = IDLE;
     }
     break;
 
   case SCROLL:
+    // ensures that if a user did not intend for this gesture to happen
+    // that it tries again
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
       mouseEnabled = true;
-      blehid.mouseScroll(0);
+      blehid.mouseScroll(0); // 0 means no scrolling
       gestureState = IDLE;
     }
     break;
@@ -658,8 +620,9 @@ void loop()
   case ZOOM:
     if (currentGesture == NONE || previousGesture != currentGesture)
     {
-      blehid.mouseScroll(0);
-      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+      blehid.mouseScroll(0); // 0 means no scrolling
+      // HID_KEY_NONE means no keyboard modifier is pressed
+      blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode);
       blehid.keyRelease();
       mouseEnabled = true;
       gestureState = IDLE;
@@ -675,12 +638,6 @@ void loop()
   }
 
   int index = matchButton(pinReadings);
-
-  // if (index != -1)
-  // {
-  // Serial.print("Detected: ");
-  // Serial.println(buttonNames[index]);
-  // }
 
   if (!pressed)
   {
@@ -707,7 +664,7 @@ void loop()
       delay(100);
       break;
 
-    case 13: // up arrow = win+tab (task view)      // CHANGE TO ALT F4
+    case 13: // up arrow = alt+f4
       if (program)
       {
         if (MOUSE_SENSITIVITY < 30)
@@ -734,7 +691,6 @@ void loop()
       break;
 
     case 16: // center button = center mouse on screen **NOT WORKING GREAT**
-             // possibly make into win +
       for (int i = 0; i < 10; i++)
       {
         blehid.mouseMove(-127, -127); // Move to corner before going to center
@@ -752,50 +708,6 @@ void loop()
   {
     pressed = false;
   }
-
-  // Serial.print(_ekf.x[1]); Serial.print(",");
-  // Serial.print(_ekf.x[3]); Serial.print(",");
-  // Serial.print(gy); Serial.print(",");
-  // Serial.print(gz); Serial.print(",");
-
-  //  Serial.print(ax); Serial.print(",");
-  // Serial.print(ay); Serial.print(",");
-  // Serial.print(az); Serial.print(",");
-  // Serial.print(pointer_1);
-  // Serial.print(",");
-  // Serial.print(middle_1);
-  // Serial.print(",");
-  // Serial.print(rightclick);
-  // Serial.print(",");
-
-  // Serial.print(leftclick);
-  // Serial.print(",");
-  // Serial.print("thumb: ");
-  // Serial.print(thumbFiltered); // middle
-  // // Serial.print(",");
-
-  // Serial.print(" pointer: ");
-  // Serial.print(indexFiltered); // pointer
-  // // Serial.print(",");
-  // Serial.print(" middle: ");
-  // Serial.print(middleFiltered); // thumb
-
-  // // Serial.print(",");
-  // Serial.print(" ring: ");
-  // Serial.print(ringFiltered); // ring
-  //                             // Serial.print(",");
-
-  // Serial.print(" pinky: ");
-  // Serial.print(pinkyFiltered); // pinky
-  // Serial.print(" ");
-
-  // Serial.print(MOUSE_SENSITIVITY);
-  // Serial.print(" ");
-
-  // Serial.print(curr * oneThousandth);
-  // Serial.println();
-  // Serial.print("mouseEnabled: %d\n", mouseEnabled);
-  // Serial.print("toggleMouse: %d", toggleMouse);
 }
 
 void startAdv(void)
