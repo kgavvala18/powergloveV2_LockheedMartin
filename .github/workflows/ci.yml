@@ -1,0 +1,46 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Cache PIO and pip
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-pio
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Static Code Analysis
+        run: |
+          # Run PIO’s static analyzer on the native build.
+          # Skip third‑party packages and fail if any medium/high defects are found:
+          pio check -e native \
+            --skip-packages \
+            --fail-on-defect=medium \
+            --fail-on-defect=high
+      - name: Run Unit Tests
+        run: pio test -e native
+
+      - name: Compile Feather firmware
+        run: pio run -e adafruit_feather_nrf52840

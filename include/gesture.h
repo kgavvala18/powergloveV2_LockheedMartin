@@ -1,23 +1,16 @@
+#pragma once
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
 
 // threshholds
-#define THUMB_THRES 75
+#define THUMB_THRES 60
 #define INDEX_THRES 40
 #define MIDDLE_THRES 50
-#define RING_THRES 50  // to be determined
-#define PINKY_THRES 50 // to be determined
+#define RING_THRES 35  // to be determined
+#define PINKY_THRES 42 // to be determined
 
-enum STRENGTH
-{
-    HIGH,
-    MEDIUM,
-    LOW,
-    NONE
-};
-
-enum GESTURES
+typedef enum Gestures
 {
     /*
     Having a letter implies that the finger is flexed.
@@ -70,23 +63,24 @@ enum GESTURES
 
     // no gesture
     NONE
-};
+} Gestures;
 
 /// @private
-enum GESTURES gesture(float thumb, float index, float middle, float ring, float pinky)
+static inline Gestures gesture(float thumb, float index, float middle, float ring, float pinky)
 {
     bool thumbBool, indexBool, middleBool, ringBool, pinkyBool;
+
     thumbBool = thumb > THUMB_THRES;
     indexBool = index > INDEX_THRES;
     middleBool = middle > MIDDLE_THRES;
     ringBool = ring > RING_THRES;
     pinkyBool = pinky > PINKY_THRES;
 
-    int mask = (thumbBool << 0) |
-               (indexBool << 1) |
+    int mask = (thumbBool << 4) |
+               (indexBool << 3) |
                (middleBool << 2) |
-               (ringBool << 3) |
-               (pinkyBool << 4);
+               (ringBool << 1) |
+               (pinkyBool << 0);
 
     switch (mask)
     {
