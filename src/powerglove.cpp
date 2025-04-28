@@ -1,5 +1,5 @@
 constexpr int EKF_N = 8; // EKF matrix dimensions
-constexpr int EKF_M = 6;
+constexpr int EKF_M = 8;
 
 #include <bluefruit.h>
 #include <Adafruit_LSM6DSOX.h>
