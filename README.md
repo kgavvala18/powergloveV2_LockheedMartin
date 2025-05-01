@@ -1,4 +1,11 @@
 # CSCE-Capstone---Powerglove
+
+
+# project google drive folder:   https://docs.google.com/presentation/d/1N8K70ewQBe_oI4atXc57p5n4KdBpgr1Ba7eDo4QlDrM/edit?usp=sharing 
+
+
+
+
 # Arduino IDE Setup
 https://learn.adafruit.com/adafruit-feather-sense/arduino-support-setup
 
