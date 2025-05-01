@@ -1,7 +1,8 @@
 # CSCE-Capstone---Powerglove
 
 
-# project google drive folder:   https://docs.google.com/presentation/d/1N8K70ewQBe_oI4atXc57p5n4KdBpgr1Ba7eDo4QlDrM/edit?usp=sharing 
+# Project google drive folder
+https://drive.google.com/drive/folders/1QBTlvf5KhOVl-Dzjxu-7hFhMazjApdm0?usp=sharing
 
 
 
