@@ -1,10 +1,9 @@
-# CSCE-Capstone---Powerglove
+# TAMU CSCE Capstone 2025 - Powerglove
 
+![My Image](images/final_prod.png)
 
 # Project google drive folder
 https://drive.google.com/drive/folders/1QBTlvf5KhOVl-Dzjxu-7hFhMazjApdm0?usp=sharing
-
-
 
 
 # Arduino IDE Setup
