@@ -2,6 +2,9 @@
 
 ![My Image](images/final_prod.png)
 
+[![Watch the video](https://img.youtube.com/vi/ArDcWYFsmJc/0.jpg)](https://www.youtube.com/watch?v=ArDcWYFsmJc)
+
+
 # Project google drive folder
 https://drive.google.com/drive/folders/1QBTlvf5KhOVl-Dzjxu-7hFhMazjApdm0?usp=sharing
 
