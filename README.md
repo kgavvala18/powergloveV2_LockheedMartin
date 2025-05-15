@@ -3,6 +3,7 @@
 ![My Image](images/final_prod.png)
 
 # Demo Video
+Click image below to watch
 [![Watch the video](https://img.youtube.com/vi/ArDcWYFsmJc/hqdefault.jpg)](https://youtu.be/ArDcWYFsmJc)
 
 
