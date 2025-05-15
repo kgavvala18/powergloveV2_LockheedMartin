@@ -3,7 +3,7 @@
 ![My Image](images/final_prod.png)
 
 # Demo Video
-[![Watch the video](https://img.youtube.com/vi/ArDcWYFsmJc/hqdefault.jpg)](https://www.youtube.com/watch?v=ArDcWYFsmJc)
+[![Watch the video](https://img.youtube.com/vi/ArDcWYFsmJc/hqdefault.jpg)](https://youtu.be/ArDcWYFsmJc)
 
 
 # Project google drive folder
