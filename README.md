@@ -1,6 +1,8 @@
 # TAMU CSCE Capstone 2025 - Powerglove
 
-![My Image](images/final_prod.png)
+|![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
+|:--:|:--:|
+| Image1 | Image2 |
 
 # Demo Video
 [![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
