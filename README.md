@@ -29,9 +29,17 @@ Parts:
 - 10 uf capacitor
 - 650 nm  5 mW laser
 
+Layout: 
+
+![image3](images/parts_diagram.png)
+
 Level Diagram:
 
-![image3](images/design_level_diagram.png)
+![image4](images/design_level_diagram.png)
+
+
+
+
 
 
 
