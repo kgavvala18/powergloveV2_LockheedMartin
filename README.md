@@ -27,7 +27,11 @@ Parts:
 - 5x 400k ohm resistors
 - 2n7000 mosfet transistor
 - 10 uf capacitor
-- 650 nm  5 mW laser 
+- 650 nm  5 mW laser
+
+Level Diagram:
+
+[![image3](images/design_level_diagram.png)]
 
 
 
