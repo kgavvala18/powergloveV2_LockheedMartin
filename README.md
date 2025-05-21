@@ -3,6 +3,11 @@
 |![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
 |:--:|:--:|
 
+This reimagined Powerglove is an advanced motion-controlled glove that users can connect to their computer over bluetooth and control using hand gestures. The glove can sense a user's hand motion so their cursor moves with their hand in space, and can sense different gestures for controls like click, zoom, and scroll among others. The glove has an accelerometer/gyroscope inertial movement unit to measure movement speed and direction on 3 axes, and to sense orientation of the user's hand in space. Flex sensors are used to detect the amount of flexion in each finger and are combined with motion and orientation sensing to encode different controls like click, drag, zoom, scroll and the laser pointer. A Kalman filter was used to filter noisy sensor signals for accurate real-time cursor control and gesture detection.  We also added various buttons to trigger different controls that are usually accessed via computer key shortcuts like ctrl-c, ctrl-v.
+To achieve reliable performance and low-latency communication, we used the Adafruit Feather nRF52840 Sense microcontroller, chosen for its bluetooth low-energy capabilities. Power is supplied via a rechargeable LiPo battery.
+This project demonstrates our team's ability to design, integrate, and optimize embedded systems with real-world applications in assistive technology, gaming, and human-computer interaction. The glove achieves smooth, responsive control with high accuracy and is adaptable for additional gestures or input features. Our development process emphasized hardware-software co-design, rigorous testing, and user-centric functionality, resulting in a high performing prototype. 
+
+
 
 # Demo Video
 [![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
