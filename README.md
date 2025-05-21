@@ -34,7 +34,7 @@ Layout:
 
 Level Diagram:
 
-![image4](images/design_level_diagram.png)
+![image4](images/level_diagram.png)
 
 
 
