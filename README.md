@@ -20,7 +20,6 @@ Parts:
 - [Adafruit feather nrf52840 sense](https://learn.adafruit.com/adafruit-feather-sense/overview)
 - [LSMD6SOX IMU](https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/overview)
 - 5x Flex sensors 
-- Laser pointer
 - Buttons 
 - USB-C charging port
 - Rechargeable 3.7 V LiPo battery
