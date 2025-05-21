@@ -3,14 +3,32 @@
 |![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
 |:--:|:--:|
 
-This reimagined Powerglove is an advanced motion-controlled glove that users can connect to their computer over bluetooth and control using hand gestures. The glove can sense a user's hand motion so their cursor moves with their hand in space, and can sense different gestures for controls like click, zoom, and scroll among others. The glove has an accelerometer/gyroscope inertial movement unit to measure movement speed and direction on 3 axes, and to sense orientation of the user's hand in space. Flex sensors are used to detect the amount of flexion in each finger and are combined with motion and orientation sensing to encode different controls like click, drag, zoom, scroll and the laser pointer. A Kalman filter was used to filter noisy sensor signals for accurate real-time cursor control and gesture detection.  We also added various buttons to trigger different controls that are usually accessed via computer key shortcuts like ctrl-c, ctrl-v.
-To achieve reliable performance and low-latency communication, we used the Adafruit Feather nRF52840 Sense microcontroller, chosen for its bluetooth low-energy capabilities. Power is supplied via a rechargeable LiPo battery.
-This project demonstrates our team's ability to design, integrate, and optimize embedded systems with real-world applications in assistive technology, gaming, and human-computer interaction. The glove achieves smooth, responsive control with high accuracy and is adaptable for additional gestures or input features. Our development process emphasized hardware-software co-design, rigorous testing, and user-centric functionality, resulting in a high performing prototype. 
+This reimagined Power Glove enhances human-computer interaction by introducing a touchless interface that translates intuitive hand gestures into precise digital input. Designed to replace the traditional mouse, it enables seamless control through natural motion, offering a more ergonomic, immersive, and futuristic method of interaction. Users can simply connect the glove to their computer via Bluetooth and control it using hand movements. The glove tracks hand motion to move the cursor and detects gestures to trigger commands such as click, zoom, scroll, and more.
 
+The system integrates an accelerometer/gyroscope IMU to track hand movement and orientation on three axes. Flex sensors embedded in each finger detect varying degrees of flexion, which, when combined with motion and orientation data, enable functions such as clicking, dragging, zooming, scrolling, and activating a laser pointer. A Kalman filter processes the sensor data to reduce noise and ensure accurate, real-time cursor control and gesture recognition. Additional buttons on the glove provide quick access to common keyboard shortcuts like Ctrl+C and Ctrl+V.
+
+To ensure reliable performance and low-latency communication, the glove is powered by the Adafruit Feather nRF52840 Sense microcontroller, selected for its Bluetooth Low Energy capabilities. A rechargeable LiPo battery supplies power, with a boost converter ensuring stable voltage across all components. This project demonstrates our team’s ability to design, integrate, and optimize embedded systems for real-world applications in assistive technology, gaming, and advanced human-computer interaction. The glove delivers smooth, responsive control with high precision and is adaptable for future expansion. Our development emphasized hardware-software co-design, rigorous testing, and user-focused functionality, resulting in a high-performance product.
 
 
 # Demo Video
 [![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
+
+# Design 
+
+Parts:
+
+- [Adafruit feather nrf52840 sense](https://learn.adafruit.com/adafruit-feather-sense/overview)
+- [LSMD6SOX IMU](https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/overview)
+- 5x Flex sensors 
+- Laser pointer
+- Buttons 
+- USB-C charging port
+- Rechargeable 3.7 V LiPo battery
+- 5x 400k ohm resistors
+- 2n7000 mosfet transistor
+- 10 uf capacitor
+- 650 nm  5 mW laser 
+
 
 
 # Project google drive folder
@@ -75,36 +93,3 @@ Ensure COMM port is correct for the connection to the board.
 ## Debug
 If updating the board user might need to open up glove and click the button on the board to update what it runs.
 
-# Git Commands
-
-## Branching
-
-When developing locally, a new branch should be created so that you will able to develop without disturbing the main branch. 
-
-Commands:
-
-1. `git branch <branch-name>` - Create branch
-
-2. `git checkout <branch-name>` - Switch to branch
-
-## Commits and Pushing to Remote
-
-When developing, you need to save your changes. Commits let you save changes in the repository. Pushing changes to remote sends a backup of your changes to the central repository. Although you can create as many commits as you'd like it is best to make good commits. This can be characterized by adequately describing what changes have been made as well as only making commits after significant additions, not every line of code
-
-Creating Commits:
-
-1. Get current changes:
-
-    `git status`
-
-2. Add necessary files:
-
-   `git add <file-name>` - Adding one file
-
-   `git add .` - Adding all files in your current directory
-
-4. Committing changes:
-
-    `git commit -m <commit message>` - Make a commit with a short commit message.
-
-    `git commit` - Make a commit with a long commit message (Opens a text editor).
