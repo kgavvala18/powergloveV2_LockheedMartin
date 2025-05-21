@@ -31,7 +31,7 @@ Parts:
 
 Level Diagram:
 
-[![image3](images/design_level_diagram.png)]
+![image3](images/design_level_diagram.png)
 
 
 
