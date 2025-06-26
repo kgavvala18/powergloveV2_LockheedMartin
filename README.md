@@ -1,4 +1,4 @@
-# TAMU CSCE Capstone 2025 - Powerglove
+PowergloveV2 - Sponsored by Lockheed Martin
 
 |![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
 |:--:|:--:|
