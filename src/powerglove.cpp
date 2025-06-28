@@ -7,25 +7,27 @@ the KB2040 board was used to test this implmentation using usb hid and we are st
 converting this to use on the feather nRF52840 sense board with BLe HID
   */
 
-constexpr int EKF_MOTION_N = 4; //  States: Y lin Acc, X lin Acc, Y ang Vel, Z ang Vel, 
+constexpr int EKF_MOTION_N = 4; //  States: Y lin Acc, X lin Acc, Y ang Vel, Z ang Vel,
 constexpr int EKF_MOTION_M = 4; //  Measurements:  Y lin Acc, X lin Acc, Y ang Vel, Z ang Vel,
 
 constexpr int EKF_FLEX_N = 5; // pointer, middle, thumb, ring, pinky
 constexpr int EKF_FLEX_M = 5; // pointer, middle, thumb, ring, pinky
 
 #include <bluefruit.h>
-// #include <Adafruit_NeoPixel.h>
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_Sensor.h>
 #include <tinyekf_motion.h>
 #include <tinyekf_flex.h>
-// #include <Mouse.h>
 #include <gesture.h>
 #include <math.h>
 #include <Adafruit_TinyUSB.h>
 
 BLEDis bledis;
 BLEHidAdafruit blehid;
+
+// predeclare functions
+void configBluetooth(void);
+void startAdv(void);
 
 // sensor variables
 float indexFiltered = 0.0;
@@ -40,62 +42,61 @@ int thumb;
 int ringFinger;
 int pinkyFinger;
 
-float my = 0.0; //mouse movement 
+float my = 0.0; // mouse movement
 float mz = 0.0;
 
 float ax = 0.0; // raw acceleration
 float ay = 0.0;
 
-float a_x = 0.0; //filtered acc
+float a_x = 0.0; // filtered acc
 float a_y = 0.0;
 
-float gy = 0.0;  // raw gyroscope values
-float gz = 0.0;  
+float gy = 0.0; // raw gyroscope values
+float gz = 0.0;
 
 sensors_event_t accel;
 sensors_event_t gyro;
 sensors_event_t temp;
-//end motion variables
+// end motion variables
 
-//motion filter
+// motion filter
 static const float EPS = 1e-6;
 
 static const float Pdiag[EKF_MOTION_N] = {0.001, 0.001, 0.001, 0.001};
 
-
 static const float Q[EKF_MOTION_N * EKF_MOTION_N] = {
 
-    EPS, 0, 0, 0, 
-    0, EPS, 0, 0, 
-    0, 0, EPS, 0, 
+    EPS, 0, 0, 0,
+    0, EPS, 0, 0,
+    0, 0, EPS, 0,
     0, 0, 0, EPS};
 
 static const float ER[EKF_MOTION_M * EKF_MOTION_M] = {
     // USED TO BE THE R MATRIX
     0.002, 0, 0, 0,
-    0, 0.002, 0, 0, 
+    0, 0.002, 0, 0,
     0, 0, 0.002, 0,
     0, 0, 0, 0.002};
 
 static const float H[EKF_MOTION_M * EKF_MOTION_N] = {
-    1, 0, 0, 0, 
+    1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1};
 
 static ekf_t_motion _ekf;
 
-//flex sensor filter 
+// flex sensor filter
 static const float EPS_ = 1e-6;
 
 static const float Pdiag_flex[EKF_FLEX_N] = {0.001, 0.001, 0.001, 0.001, 0.001};
 
 static const float Q_flex[EKF_FLEX_N * EKF_FLEX_N] = {
     EPS_, 0, 0, 0, 0,
-    0, EPS_, 0, 0, 0, 
+    0, EPS_, 0, 0, 0,
     0, 0, EPS_, 0, 0,
     0, 0, 0, EPS_, 0,
-    0, 0, 0, 0, 1e-10 };
+    0, 0, 0, 0, 1e-10};
 
 static const float ER_flex[EKF_FLEX_M * EKF_FLEX_M] = {
     // USED TO BE THE R MATRIX
@@ -108,15 +109,13 @@ static const float ER_flex[EKF_FLEX_M * EKF_FLEX_M] = {
 static const float H_flex[EKF_FLEX_M * EKF_FLEX_N] = {
     1, 0, 0, 0, 0,
     0, 1, 0, 0, 0,
-    0, 0, 1, 0, 0, 
-    0, 0, 0, 1, 0, 
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
     0, 0, 0, 0, 1};
 
 static ekf_t_flex _ekf_flex;
 
-
-
-Adafruit_LSM6DSOX sox;  
+Adafruit_LSM6DSOX sox;
 float prev = 0.0;
 float curr = 0.0;
 float dt = 0.01;
@@ -133,7 +132,6 @@ uint8_t activeKey[6] = {0};
 
 bool mouseEnabled = true;
 bool toggleMouse = false;
-
 
 constexpr Gestures LEFT_CLICK_GESTURE = I;
 constexpr Gestures RIGHT_CLICK_GESTURE = M;
@@ -159,7 +157,7 @@ enum GestureState
     DRAG_EVENT,
     LASER,
     SNIP,
-    ALT_F4,
+    // ALT_F4,
     ALT_TAB,
     WIN_TAB,
     DISABLE_MOUSE,
@@ -318,7 +316,7 @@ void setup()
     // Serial.println("Motion Control Glove - Starting");
 
     ekf_initialize_motion(&_ekf, Pdiag);
-    ekf_initialize_flex(&_ekf_flex, Pdiag_flex);    
+    ekf_initialize_flex(&_ekf_flex, Pdiag_flex);
 
     if (!sox.begin_SPI(1))
     {
@@ -361,28 +359,29 @@ void setup()
     digitalWrite(22, LOW);
 }
 
-void getMotionData(){
+void getMotionData()
+{
     sox.getEvent(&accel, &gyro, &temp);
 
     ax = accel.acceleration.x + 0.95;
     ay = accel.acceleration.y - 0.95;
-    //az = accel.acceleration.z - 10.03;
+    // az = accel.acceleration.z - 10.03;
 
-    //gx = gyro.gyro.x;
+    // gx = gyro.gyro.x;
     gy = 0.01 + gyro.gyro.y;
     gz = 0.01 + gyro.gyro.z;
 
     const float z[EKF_MOTION_M] = {ay, ax, gy, gz};
 
-    //const float z[EKF_MOTION_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
+    // const float z[EKF_MOTION_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
     const float F[EKF_MOTION_N * EKF_MOTION_N] = {
-        1, 0, 0, 0,  
+        1, 0, 0, 0,
         0, 1, 0, 0,
-        0, 0, 1, 0, 
+        0, 0, 1, 0,
         0, 0, 0, 1};
 
     // Process model f(x)
-    const float fx[EKF_MOTION_N] = {_ekf.x[0] , _ekf.x[1], _ekf.x[2] , _ekf.x[3]}; 
+    const float fx[EKF_MOTION_N] = {_ekf.x[0], _ekf.x[1], _ekf.x[2], _ekf.x[3]};
 
     // Run the prediction step of the eKF
     ekf_predict_motion(&_ekf, fx, F, Q);
@@ -393,8 +392,8 @@ void getMotionData(){
     ekf_update_motion(&_ekf, z, hx, H, ER);
 }
 
-
-void getFlexData(){
+void getFlexData()
+{
     middleFinger = analogRead(A0);
     indexFinger = analogRead(A1);
     thumb = analogRead(A2);
@@ -403,16 +402,16 @@ void getFlexData(){
 
     const float z[EKF_FLEX_M] = {thumb, indexFinger, middleFinger, ringFinger, pinkyFinger};
 
-    //const float z[EKF_MOTION_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
+    // const float z[EKF_MOTION_M] = {gy, gz, indexFinger, middleFinger, thumb, ringFinger};
     const float F[EKF_FLEX_N * EKF_FLEX_N] = {
-        1, 0, 0, 0, 0,  
+        1, 0, 0, 0, 0,
         0, 1, 0, 0, 0,
         0, 0, 1, 0, 0,
         0, 0, 0, 1, 0,
         0, 0, 0, 1, 1};
 
     // Process model f(x)
-    const float fx[EKF_FLEX_N] = {_ekf_flex.x[0] , _ekf_flex.x[1], _ekf_flex.x[2], _ekf_flex.x[3], _ekf_flex.x[4] }; 
+    const float fx[EKF_FLEX_N] = {_ekf_flex.x[0], _ekf_flex.x[1], _ekf_flex.x[2], _ekf_flex.x[3], _ekf_flex.x[4]};
 
     // Run the prediction step of the eKF
     ekf_predict_flex(&_ekf_flex, fx, F, Q_flex);
@@ -421,7 +420,6 @@ void getFlexData(){
 
     // Run the update step
     ekf_update_flex(&_ekf_flex, z, hx, H_flex, ER_flex);
-
 }
 
 // the loop routine runs over and over again forever:
@@ -431,16 +429,13 @@ void loop()
 
     dt = (curr - prev) * oneThousandth;
     prev = curr;
-    
+
     getMotionData();
     getFlexData();
 
     // scale the acceleration values by 20
     /*the scaling factor was empiricaly determined. We need to find why this works
     to see if there may be a more optimal value*/
-
-
-    
 
     my = MOUSE_SENSITIVITY * _ekf.x[2];
     mz = -MOUSE_SENSITIVITY * _ekf.x[3];
@@ -449,10 +444,10 @@ void loop()
     thumbFiltered = _ekf_flex.x[0];
     indexFiltered = _ekf_flex.x[1];
     middleFiltered = _ekf_flex.x[2];
-    
+
     ringFiltered = _ekf_flex.x[3];
     pinkyFiltered = _ekf_flex.x[4];
-   
+
     if (mouseEnabled)
     {
         blehid.mouseMove(mz, my);
@@ -461,11 +456,11 @@ void loop()
     ////
     ////GESTURE TESTING
     previousGesture = currentGesture;
-    //currentGesture = NONE;
+    // currentGesture = NONE;
     currentGesture = gesture(thumbFiltered, indexFiltered, middleFiltered, ringFiltered, pinkyFiltered);
-    //currentGesture = gesture(thumb, indexFinger, middleFinger, ringFinger, pinkyFinger);
+    // currentGesture = gesture(thumb, indexFinger, middleFinger, ringFinger, pinkyFinger);
 
-    //Serial.println(a_x);
+    // Serial.println(a_x);
 
     switch (gestureState)
     {
@@ -545,7 +540,7 @@ void loop()
             if (a_x > 2)
             {
                 blehid.mouseScroll(1);
-                //delay(200);
+                // delay(200);
                 gestureState = SCROLL;
             }
 
@@ -553,7 +548,7 @@ void loop()
             else if (a_x < -2)
             {
                 blehid.mouseScroll(-1);
-                //delay(200);
+                // delay(200);
                 gestureState = SCROLL;
             }
         }
@@ -567,7 +562,7 @@ void loop()
             {
                 blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
                 blehid.mouseScroll(-1);
-                //delay(300);
+                // delay(300);
                 gestureState = ZOOM;
             }
 
@@ -576,7 +571,7 @@ void loop()
             {
                 blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, KEYBOARD_MODIFIER_LEFTCTRL, emptyKeycode); // 0x01
                 blehid.mouseScroll(1);
-                //delay(300);
+                // delay(300);
                 gestureState = ZOOM;
             }
         }
@@ -693,13 +688,14 @@ void loop()
             blehid.mouseScroll(-1);
             delay(300);
         }
-        else{
+        else
+        {
             blehid.mouseScroll(0);
-            //blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-            //blehid.keyRelease();
-           // mouseEnabled = true;
-           // gestureState = IDLE;
-            //break;
+            // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+            // blehid.keyRelease();
+            // mouseEnabled = true;
+            // gestureState = IDLE;
+            // break;
         }
 
         break;
@@ -730,13 +726,14 @@ void loop()
             blehid.mouseScroll(1);
             delay(400);
         }
-        else{
+        else
+        {
             blehid.mouseScroll(0);
-            //blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
-            //blehid.keyRelease();
-            //mouseEnabled = true;
-            //gestureState = IDLE;
-            //break;
+            // blehid.keyboardReport(BLE_CONN_HANDLE_INVALID, HID_KEY_NONE, emptyKeycode); // 0
+            // blehid.keyRelease();
+            // mouseEnabled = true;
+            // gestureState = IDLE;
+            // break;
         }
 
         break;
@@ -835,22 +832,22 @@ void loop()
 
     // Serial.print(leftclick);
     // Serial.print(",");
-    //Serial.print("thumb: ");
+    // Serial.print("thumb: ");
     Serial.print(thumbFiltered); // middle
     Serial.print(",");
 
-    //Serial.print(" pointer: ");
+    // Serial.print(" pointer: ");
     Serial.print(indexFiltered); // pointer
     Serial.print(",");
-   // Serial.print(" middle: ");
+    // Serial.print(" middle: ");
     Serial.print(middleFiltered); // thumb
 
     Serial.print(",");
-    //Serial.print(" ring: ");
+    // Serial.print(" ring: ");
     Serial.print(ringFiltered); // ring
     Serial.print(",");
 
-    //Serial.print(" pinky: ");
+    // Serial.print(" pinky: ");
     Serial.print(pinkyFiltered); // pinky
     Serial.print(",");
 
