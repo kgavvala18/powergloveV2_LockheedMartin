@@ -1,11 +1,42 @@
-# TAMU CSCE Capstone 2025 - Powerglove
+# PowergloveV2 - Sponsored by Lockheed Martin
 
 |![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
 |:--:|:--:|
 
+The reimagined Power Glove enhances human-computer interaction by introducing a touchless interface that translates intuitive hand gestures into precise digital input. Designed to replace the traditional mouse, it enables seamless control through natural motion, offering a more ergonomic, immersive, and futuristic method of interaction. Users can simply connect the glove to their computer via Bluetooth and control it using hand movements. The glove tracks hand motion to move the cursor and detects gestures to trigger commands such as click, zoom, scroll, and more.
+
+The system integrates an accelerometer/gyroscope IMU to track hand movement and orientation on three axes. Flex sensors embedded in each finger detect varying degrees of flexion, which, when combined with motion and orientation data, enable functions such as clicking, dragging, zooming, scrolling, and activating a laser pointer. Additional buttons on the glove provide quick access to common keyboard shortcuts like Ctrl+C and Ctrl+V. The Adafruit Feather nrf52840 Sense microcontroller was used for its processing speed, bluetooth LE, and usb charging capabilities.
 
 # Demo Video
 [![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
+
+# Design 
+
+Parts:
+
+- [Adafruit feather nrf52840 sense](https://learn.adafruit.com/adafruit-feather-sense/overview)
+- [LSMD6SOX IMU](https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/overview)
+- 5x Flex sensors 
+- Buttons 
+- USB-C charging port
+- Rechargeable 3.7 V LiPo battery
+- 5x 400k ohm resistors
+- 2n7000 mosfet transistor
+- 10 uf capacitor
+- 650 nm  5 mW laser
+
+Layout: 
+
+![image3](images/parts_diagram.png)
+
+Level Diagram:
+
+![image4](images/level_diagram.png)
+
+
+
+
+
 
 
 # Project google drive folder
@@ -70,36 +101,3 @@ Ensure COMM port is correct for the connection to the board.
 ## Debug
 If updating the board user might need to open up glove and click the button on the board to update what it runs.
 
-# Git Commands
-
-## Branching
-
-When developing locally, a new branch should be created so that you will able to develop without disturbing the main branch. 
-
-Commands:
-
-1. `git branch <branch-name>` - Create branch
-
-2. `git checkout <branch-name>` - Switch to branch
-
-## Commits and Pushing to Remote
-
-When developing, you need to save your changes. Commits let you save changes in the repository. Pushing changes to remote sends a backup of your changes to the central repository. Although you can create as many commits as you'd like it is best to make good commits. This can be characterized by adequately describing what changes have been made as well as only making commits after significant additions, not every line of code
-
-Creating Commits:
-
-1. Get current changes:
-
-    `git status`
-
-2. Add necessary files:
-
-   `git add <file-name>` - Adding one file
-
-   `git add .` - Adding all files in your current directory
-
-4. Committing changes:
-
-    `git commit -m <commit message>` - Make a commit with a short commit message.
-
-    `git commit` - Make a commit with a long commit message (Opens a text editor).
