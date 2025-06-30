@@ -1,14 +1,15 @@
 # PowergloveV2 - Sponsored by Lockheed Martin
 
-|![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
-|:--:|:--:|
+Demo Video
+[![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
+
 
 The reimagined Power Glove enhances human-computer interaction by introducing a touchless interface that translates intuitive hand gestures into precise digital input. Designed to replace the traditional mouse, it enables seamless control through natural motion, offering a more ergonomic, immersive, and futuristic method of interaction. Users can simply connect the glove to their computer via Bluetooth and control it using hand movements. The glove tracks hand motion to move the cursor and detects gestures to trigger commands such as click, zoom, scroll, and more.
 
 The system integrates an accelerometer/gyroscope IMU to track hand movement and orientation on three axes. Flex sensors embedded in each finger detect varying degrees of flexion, which, when combined with motion and orientation data, enable functions such as clicking, dragging, zooming, scrolling, and activating a laser pointer. Additional buttons on the glove provide quick access to common keyboard shortcuts like Ctrl+C and Ctrl+V. The Adafruit Feather nrf52840 Sense microcontroller was used for its processing speed, bluetooth LE, and usb charging capabilities.
 
-# Demo Video
-[![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
+|![Image1](images/final_prod.png)|![Image2](images/side_laser(2).png)
+|:--:|:--:|
 
 # Design 
 
