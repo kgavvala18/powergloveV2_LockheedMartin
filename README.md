@@ -1,6 +1,7 @@
 # PowergloveV2 - Sponsored by Lockheed Martin
 
-Demo Video
+
+Demo Video:
 [![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
 
 
