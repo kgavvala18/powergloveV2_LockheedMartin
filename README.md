@@ -1,8 +1,9 @@
 # PowergloveV2 - Sponsored by Lockheed Martin
 
 
-[![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)
-*Click for demo*
+|[![Watch the video](images/demo_thumbnail.png)](https://youtu.be/ArDcWYFsmJc)|
+|:--:|
+| *Click to watch the demo video* |
 
 The reimagined Power Glove enhances human-computer interaction by introducing a touchless interface that translates intuitive hand gestures into precise digital input. Designed to replace the traditional mouse, it enables seamless control through natural motion, offering a more ergonomic, immersive, and futuristic method of interaction. Users can simply connect the glove to their computer via Bluetooth and control it using hand movements. The glove tracks hand motion to move the cursor and detects gestures to trigger commands such as click, zoom, scroll, and more.
 
