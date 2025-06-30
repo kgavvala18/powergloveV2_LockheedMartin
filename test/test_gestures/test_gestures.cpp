@@ -2,18 +2,31 @@
 #include "gesture.h"
 
 // Macro to generate one test per bitmask/gesture
-#define MAKE_TEST(_mask, _gesture)                                  \
-void test_##_gesture(void) {                                        \
-    float thumb  = ((_mask & 0x10) ? THUMB_THRES  + 1.0f : THUMB_THRES  - 1.0f); \
-    float index  = ((_mask & 0x08) ? INDEX_THRES  + 1.0f : INDEX_THRES  - 1.0f); \
-    float middle = ((_mask & 0x04) ? MIDDLE_THRES + 1.0f : MIDDLE_THRES - 1.0f); \
-    float ring   = ((_mask & 0x02) ? RING_THRES   + 1.0f : RING_THRES   - 1.0f); \
-    float pinky  = ((_mask & 0x01) ? PINKY_THRES  + 1.0f : PINKY_THRES  - 1.0f); \
-    TEST_ASSERT_EQUAL_INT_MESSAGE(                                 \
-        _gesture,                                                  \
-        gesture(thumb, index, middle, ring, pinky),               \
-        #_gesture                                                \
-    );                                                             \
+#define MAKE_TEST(_mask, _gesture)                                                   \
+    void test_##_gesture(void)                                                       \
+    {                                                                                \
+        float thumb = ((_mask & 0x10) ? THUMB_THRES + 1.0f : THUMB_THRES - 1.0f);    \
+        float index = ((_mask & 0x08) ? INDEX_THRES + 1.0f : INDEX_THRES - 1.0f);    \
+        float middle = ((_mask & 0x04) ? MIDDLE_THRES + 1.0f : MIDDLE_THRES - 1.0f); \
+        float ring = ((_mask & 0x02) ? RING_THRES + 1.0f : RING_THRES - 1.0f);       \
+        float pinky = ((_mask & 0x01) ? PINKY_THRES + 1.0f : PINKY_THRES - 1.0f);    \
+        TEST_ASSERT_EQUAL_INT_MESSAGE(                                               \
+            _gesture,                                                                \
+            gesture(thumb, index, middle, ring, pinky),                              \
+            #_gesture);                                                              \
+    }
+
+extern "C"
+{
+    void setUp(void)
+    {
+        // Optional: Initialize shared test state here
+    }
+
+    void tearDown(void)
+    {
+        // Optional: Clean up test state here
+    }
 }
 
 // five fingers
@@ -60,7 +73,8 @@ MAKE_TEST(0b00001, P)
 // NONE
 MAKE_TEST(0b00000, NONE)
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
     UNITY_BEGIN();
 
     // Invoke every generated test

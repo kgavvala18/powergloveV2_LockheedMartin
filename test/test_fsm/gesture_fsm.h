@@ -3,7 +3,8 @@
 #include "gesture.h"
 
 // All the “side‑effects” your FSM can request:
-enum Action {
+enum Action
+{
   ACTION_NONE,
   ACTION_PRESS_LEFT,
   ACTION_RELEASE_LEFT,
@@ -12,7 +13,7 @@ enum Action {
   ACTION_ENABLE_LASER,
   ACTION_DISABLE_LASER,
   ACTION_TOGGLE_MOUSE,
-  ACTION_SNIP,          // Win+Shift+S
+  ACTION_SNIP, // Win+Shift+S
   ACTION_ALT_TAB,
   ACTION_ALT_SHIFT_TAB,
   ACTION_SCROLL_UP,
@@ -21,21 +22,22 @@ enum Action {
   ACTION_ZOOM_OUT,
 };
 
-static constexpr Gestures LEFT_CLICK_GESTURE        = I;
-static constexpr Gestures RIGHT_CLICK_GESTURE       = M;
-static constexpr Gestures DRAG_GESTURE              = TI;
-static constexpr Gestures LASER_GESTURE             = T;
-static constexpr Gestures DISABLE_MOUSE_GESTURE     = TIMRP;
-static constexpr Gestures SNIP_GESTURE              = TMRP;
+static constexpr Gestures LEFT_CLICK_GESTURE = I;
+static constexpr Gestures RIGHT_CLICK_GESTURE = M;
+static constexpr Gestures DRAG_GESTURE = TI;
+static constexpr Gestures LASER_GESTURE = T;
+static constexpr Gestures DISABLE_MOUSE_GESTURE = TIMRP;
+static constexpr Gestures SNIP_GESTURE = TMRP;
 // static constexpr Gestures ALT_F4_GESTURE          = TIRP;  // (if you ever re‑enable)
 //
-static constexpr Gestures ALT_TAB_GESTURE           = MRP;
-static constexpr Gestures ALT_SHIFT_TAB_GESTURE     = IRP;
-static constexpr Gestures ZOOM_GESTURE              = TP;
-static constexpr Gestures SCROLL_GESTURE            = TRP;
+static constexpr Gestures ALT_TAB_GESTURE = MRP;
+static constexpr Gestures ALT_SHIFT_TAB_GESTURE = IRP;
+static constexpr Gestures ZOOM_GESTURE = TP;
+static constexpr Gestures SCROLL_GESTURE = TRP;
 
 // Your FSM’s states:
-enum GestureState {
+enum GestureState
+{
   IDLE,
   LEFT_CLICK_EVENT,
   RIGHT_CLICK_EVENT,
@@ -50,11 +52,12 @@ enum GestureState {
 };
 
 // The result of one tick through the FSM:
-struct FsmResult {
+struct FsmResult
+{
   GestureState nextState;
-  Action      action;
-  bool        mouseEnabled;
-  bool        toggleMouse;
+  Action action;
+  bool mouseEnabled;
+  bool toggleMouse;
 };
 
 /**
@@ -69,8 +72,7 @@ struct FsmResult {
  */
 FsmResult handleGestureFsm(
     GestureState prevState,
-    Gestures     currentGest,
-    float        ax,
-    bool         mouseEnabled,
-    bool         toggleMouse
-);
+    Gestures currentGest,
+    float ax,
+    bool mouseEnabled,
+    bool toggleMouse);

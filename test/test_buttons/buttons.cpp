@@ -1,5 +1,18 @@
 #include "buttons.h"
 
+extern "C"
+{
+    void setUp(void)
+    {
+        // Optional: Initialize shared test state here
+    }
+
+    void tearDown(void)
+    {
+        // Optional: Clean up test state here
+    }
+}
+
 // raw patterns, exactly as you had them
 const int button_none[] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
 const int button0[] = {1, 0, 0, 0, 0, 0, 1, 0, 1};
@@ -28,36 +41,44 @@ const int *buttonSignatures[] = {
     button0, button1, button2, button3, button4, button5, button6,
     button7, button8, button9, buttonProg, buttonEnter, leftArrow,
     upArrow, rightArrow, downArrow, buttonCenter, buttonSelect,
-    buttonStart, buttonB, buttonA
-};
+    buttonStart, buttonB, buttonA};
 
 const char *buttonNames[] = {
     "Button 0", "Button 1", "Button 2", "Button 3", "Button 4",
     "Button 5", "Button 6", "Button 7", "Button 8", "Button 9",
     "Button Prog", "Button Enter", "Left Arrow", "Up Arrow",
     "Right Arrow", "Down Arrow", "Button Center", "Button Select",
-    "Button Start", "Button B", "Button A"
-};
+    "Button Start", "Button B", "Button A"};
 
-int matchButton(const int pinReadings[numPins]) {
+int matchButton(const int pinReadings[numPins])
+{
     // no‑button fast‑path
     bool none = true;
-    for (int i = 0; i < numPins; i++) {
-        if (pinReadings[i] != button_none[i]) {
-            none = false; break;
+    for (int i = 0; i < numPins; i++)
+    {
+        if (pinReadings[i] != button_none[i])
+        {
+            none = false;
+            break;
         }
     }
-    if (none) return -1;
+    if (none)
+        return -1;
 
     // try each signature
-    for (int b = 0; b < numButtons; b++) {
+    for (int b = 0; b < numButtons; b++)
+    {
         bool match = true;
-        for (int i = 0; i < numPins; i++) {
-            if (pinReadings[i] != buttonSignatures[b][i]) {
-                match = false; break;
+        for (int i = 0; i < numPins; i++)
+        {
+            if (pinReadings[i] != buttonSignatures[b][i])
+            {
+                match = false;
+                break;
             }
         }
-        if (match) return b;
+        if (match)
+            return b;
     }
     return -1;
 }
