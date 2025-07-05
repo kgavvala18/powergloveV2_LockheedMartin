@@ -44,12 +44,6 @@ Level Diagram:
 # Project google drive folder
 https://drive.google.com/drive/folders/1QBTlvf5KhOVl-Dzjxu-7hFhMazjApdm0?usp=sharing
 
-
-# Arduino IDE Setup
-https://learn.adafruit.com/adafruit-feather-sense/arduino-support-setup
-
-Follow steps below depending on OS
-
 # For Windows and Linux
 
 1. Download Arduino IDE at https://www.arduino.cc/en/Main/Software
@@ -78,28 +72,6 @@ Linux Users will likely need to install https://www.silabs.com/developer-tools/u
 4. Ensure adafruit-nrfutil can be executed in terminal by running `$ adafruit-nrfutil version`
 
 
-# Library Manager install requirements
 
-On the left click of the Arduino IDE click the library manager(book icon) and install the following libraries. Names should be exact to name in library manager
 
-Arduino_APDS9960
-Arduino_LSM6DS3
-Adafruit APDS9960 Library
-Adafruit BMP280 Library
-Adafruit BusIO
-Adafruit LIS3MDL
-Adafruit LSM6DS
-Adafruit SHT31 Library
-Adafruit Si7021 Library
-Adafruit Unified Sensor
-LSM6
-
-# How to run on Arduino IDE
-
-After steps above plug in the Adafruit Feather nRF52840 Sense and Upload your code with the Arduino IDE.
-
-Ensure COMM port is correct for the connection to the board.
-
-## Debug
-If updating the board user might need to open up glove and click the button on the board to update what it runs.
 
